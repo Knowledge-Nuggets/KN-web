@@ -1,4 +1,6 @@
 import { useRef, useState, useEffect, useContext } from "react";
+import { Link } from "react-router-dom";
+import "./Form.css";
 
 const Login = () => {
   const userRef = useRef();
@@ -46,7 +48,7 @@ const Login = () => {
         <br />
         <span className="line">
           {/*put router link here*/}
-          <a href="#">Sign Up</a>
+          <Link to="/register">Sign Up</Link>
         </span>
       </p>
     </section>

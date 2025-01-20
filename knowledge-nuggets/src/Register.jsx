@@ -1,11 +1,13 @@
 import React from "react";
 import { useRef, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   faCheck,
   faTimes,
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import "./Form.css";
 
 const usernameRegex = /^[a-zA-Z0-9._]{4,20}$/;
 const passwordRegex =
@@ -75,7 +77,7 @@ const Register = () => {
         <section>
           <h1>Success!</h1>
           <p>
-            <a href="#">Sign In</a>
+            <Link to="/login">Sign In</Link>
           </p>
         </section>
       ) : (
@@ -206,7 +208,7 @@ const Register = () => {
             <br />
             <span className="line">
               {/*put router link here*/}
-              <a href="#">Sign In</a>
+              <Link to="/login">Sign In</Link>
             </span>
           </p>
         </section>

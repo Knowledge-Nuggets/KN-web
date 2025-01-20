@@ -1,0 +1,27 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #333;
+  color: white;
+}
+
+.navbar-title h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.navbar-links .sign-in-button {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.navbar-links .sign-in-button:hover {
+  background-color: #0056b3;
+}
