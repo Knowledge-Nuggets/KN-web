@@ -3,8 +3,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color: #333;
+  background-color: white;
   color: white;
+  width: 100%; /* Make the navbar span the entire width */
+  position: fixed; /* Keep the navbar at the top */
+  top: 0;
+  left: 0;
+  z-index: 1000; /* Ensure the navbar is above other elements */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add a slight shadow for a sleek look */
 }
 
 .navbar-title h1 {
@@ -24,4 +30,9 @@
 
 .navbar-links .sign-in-button:hover {
   background-color: #0056b3;
+}
+
+body {
+  margin: 0; /* Remove default body margin to ensure the navbar aligns properly */
+  padding-top: 4rem; /* Add padding equal to the navbar height to prevent content from being hidden underneath */
 }
