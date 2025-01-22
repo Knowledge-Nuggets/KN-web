@@ -7,32 +7,36 @@
 
 /* Global styles */
 body {
-  font-family: "Arial", sans-serif;
-  background-color: #f3f3f3;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start; /* Changed to flex-start to allow page to expand */
-  height: 100%; /* Ensures full height of the viewport */
-  min-height: 100vh; /* Makes sure the body always takes at least the full height of the screen */
-  overflow-y: auto; /* Enables vertical scrolling when the content exceeds the viewport */
+    height: 100%;
+    margin: 0;
+    background: #0c192c;
+    font-family: 'Rubik', sans-serif;
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    overflow: hidden;
 }
 
 .container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: flex; 
   flex-direction: column;
-  background-color: #fff;
+  justify-content: center; 
+  align-items: center; 
+  background: #4d4d4d;
+  font-family: 'Rubik', sans-serif;
+  overflow: hidden;
   border-radius: 10px;
-  padding: 2rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px; /* Set max-width to avoid stretching too wide */
-  margin-top: 1rem; /* Small margin to keep it from sticking to the top */
+  width: 1000px;
+  padding: 1rem;
+  z-index: 1;
+  margin: 0 auto;
 }
+
 
 .form-container {
   width: 100%;
+  position: relative;
 }
 
 h1 {

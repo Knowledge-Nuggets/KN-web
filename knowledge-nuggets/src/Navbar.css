@@ -3,19 +3,18 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color: white;
   color: white;
   width: 100%; /* Make the navbar span the entire width */
   position: fixed; /* Keep the navbar at the top */
   top: 0;
   left: 0;
   z-index: 1000; /* Ensure the navbar is above other elements */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add a slight shadow for a sleek look */
 }
 
 .navbar-title h1 {
   margin: 0;
   font-size: 1.5rem;
+  color: #007bff;
 }
 
 .navbar-links .sign-in-button {

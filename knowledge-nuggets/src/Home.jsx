@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./Home.css";
 import Navbar from "./Navbar";
+import Bubbles from "./bubbles";
 
 const Home = () => {
   const [url, setUrl] = useState("");
@@ -36,6 +37,8 @@ const Home = () => {
   return (
     <>
       <Navbar />
+      <Bubbles />
+
       <div className="container">
         <div className="form-container">
           <h1>Enter YouTube URL</h1>

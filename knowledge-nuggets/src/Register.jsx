@@ -8,6 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Form.css";
+import Bubbles from "./bubbles";
 
 const usernameRegex = /^[a-zA-Z0-9._]{4,20}$/;
 const passwordRegex =
@@ -73,6 +74,9 @@ const Register = () => {
   return (
     //the Success ternary is just placeholder since wla syang database for checking if nakasign up
     <>
+
+      <Bubbles />
+
       {success ? (
         <section>
           <h1>Success!</h1>
