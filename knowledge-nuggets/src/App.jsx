@@ -7,6 +7,7 @@ import {
 import Register from "./Register";
 import Login from "./Login";
 import Home from "./Home";
+import Profile from "./Profile";
 import PrivateRoute from "./PrivateRoute";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Route path="/home" element={<PrivateRoute element={Home} />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </Router>
   );

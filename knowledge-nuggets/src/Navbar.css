@@ -20,10 +20,22 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a subtle shadow for depth */
 }
 
-.navbar h1 {
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%; /* Ensure the container spans the entire width */
+}
+
+.navbar-logo {
   margin: 0;
   font-size: 1.5rem;
   color: #007bff; /* Blue color for the title */
+  text-decoration: none;
+}
+
+.navbar-logo:hover {
+  color: #0056b3; /* Darker blue on hover */
 }
 
 .nav-links {
@@ -31,13 +43,18 @@ body {
   align-items: center;
 }
 
-.nav-links span {
+.navbar-link {
   margin-right: 1rem;
   font-size: 1rem;
-  color: #007bff; /* Blue color for the greeting */
+  color: #007bff; /* Blue color for the link */
+  text-decoration: none;
 }
 
-.nav-links .logout-button {
+.navbar-link:hover {
+  color: #0056b3;
+}
+
+.logout-button {
   padding: 0.5rem 1rem;
   background-color: #007bff;
   color: white;
@@ -49,6 +66,6 @@ body {
   transition: background-color 0.3s;
 }
 
-.nav-links .logout-button:hover {
+.logout-button:hover {
   background-color: #0056b3;
 }

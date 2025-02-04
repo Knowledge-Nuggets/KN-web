@@ -9,7 +9,7 @@
 body {
   height: 100%;
   margin: 0;
-  background: #c7c9ce;
+  background: #dedfe2;
   font-family: "Rubik", sans-serif;
   display: flex;
   justify-content: center;
@@ -22,7 +22,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: #e4e0e0;
+  background: #f8f8f8;
   font-family: "Rubik", sans-serif;
   overflow: hidden;
   border-radius: 10px;

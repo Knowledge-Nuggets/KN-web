@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth } from "./firebase/firebase"; // Import your Firebase auth
+import { auth } from "./firebase/firebase"; // Import Firebase auth
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import "./Navbar.css";
 
@@ -26,12 +26,18 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <h1>Knowledge Nuggets</h1>
-      <div className="nav-links">
-        {currentUser && <span>Hello, {currentUser.email}</span>}
-        <button onClick={handleLogout} className="logout-button">
-          Logout
-        </button>
+      <div className="navbar-container">
+        <Link to="/home" className="navbar-logo">
+          Knowledge Nuggets
+        </Link>
+        <div className="nav-links">
+          <Link to="/profile" className="navbar-link">
+            {currentUser ? currentUser.email : "Profile"}
+          </Link>
+          <button onClick={handleLogout} className="logout-button">
+            Logout
+          </button>
+        </div>
       </div>
     </nav>
   );

@@ -1,5 +1,4 @@
-import React from "react";
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   faCheck,
@@ -7,11 +6,10 @@ import {
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import "./Form.css";
-import Bubbles from "./bubbles";
 import { app, auth, db } from "./firebase/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ref, set } from "firebase/database";
+import "./Form.css"; // Ensure this includes the new styles
 
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const passwordRegex =
@@ -87,15 +85,17 @@ const Register = () => {
   };
 
   return (
-    <>
-      {success ? (
-        <section>
-          <h1>Success!</h1>
-          <p>
-            <Link to="/login">Sign In</Link>
-          </p>
-        </section>
-      ) : (
+    <div className="split-screen">
+      <div className="left">
+        <h1>Knowledge Nuggets</h1>
+        <h2>AI Video Summarization Tool for Learning</h2>
+        <br />
+        <p>
+          Knowledge Nuggets uses a customized AI to increase your efficiency in
+          learning
+        </p>
+      </div>
+      <div className="right">
         <section>
           <p
             ref={errRef}
@@ -214,16 +214,16 @@ const Register = () => {
             </button>
           </form>
 
-          <p>
+          <p className="already-registered">
             Already registered?
             <br />
-            <span className="line">
-              <Link to="/login">Sign In</Link>
-            </span>
+            <Link to="/login" className="sign-in-link">
+              Sign In
+            </Link>
           </p>
         </section>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 

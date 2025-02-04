@@ -43,46 +43,60 @@ const Login = () => {
   };
 
   return (
-    <>
-      <section>
-        <p
-          ref={errRef}
-          className={errMsg ? "errmsg" : "offscreen"}
-          aria-live="assertive"
-        >
-          {errMsg}
-        </p>
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="username">Username:</label>
-          <input
-            type="text"
-            id="username"
-            ref={userRef}
-            autoComplete="off"
-            onChange={(e) => setUser(e.target.value)}
-            value={user}
-            required
-          />
-
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            onChange={(e) => setPwd(e.target.value)}
-            value={pwd}
-            required
-          />
-          <button>Sign In</button>
-        </form>
-        <p>
-          Need an Account?
+    <div className="split-screen">
+      <div className="left">
+        <h1>Knowledge Nuggets</h1>
+        <div className="info">
+          <h2>AI Video Summarization Tool for Learning</h2>
           <br />
-          <span className="line">
-            <Link to="/register">Sign Up</Link>
-          </span>
-        </p>
-      </section>
-    </>
+          <p>
+            Knowledge Nuggets uses a customized AI to increase your efficiency
+            in learning
+          </p>
+        </div>
+      </div>
+      <div className="right">
+        <section>
+          <p
+            ref={errRef}
+            className={errMsg ? "errmsg" : "offscreen"}
+            aria-live="assertive"
+          >
+            {errMsg}
+          </p>
+          <h1>Login</h1>
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="username">Username:</label>
+            <input
+              type="text"
+              id="username"
+              ref={userRef}
+              autoComplete="off"
+              onChange={(e) => setUser(e.target.value)}
+              value={user}
+              required
+            />
+
+            <label htmlFor="password">Password:</label>
+            <input
+              type="password"
+              id="password"
+              onChange={(e) => setPwd(e.target.value)}
+              value={pwd}
+              required
+            />
+            <button>Sign In</button>
+          </form>
+          <p className="need-account">
+            Need an Account?
+            <br />
+            <Link to="/register" className="sign-up-button">
+              Sign Up
+            </Link>
+          </p>
+        </section>
+      </div>
+    </div>
   );
 };
 
