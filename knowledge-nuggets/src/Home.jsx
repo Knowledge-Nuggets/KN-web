@@ -28,10 +28,10 @@ const Home = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/analyze-video', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/analyze-video", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ video_url: url }),
       });
@@ -41,21 +41,24 @@ const Home = () => {
       }
 
       const data = await response.json();
-      
+
       // Format the summary text
       const summary = [
         data.youtube_captions && `YouTube Captions: ${data.youtube_captions}`,
         data.transcription && `Transcription: ${data.transcription}`,
-        data.scene_frequency && 'Visual Content Analysis:',
-        data.scene_frequency && Object.entries(data.scene_frequency)
-          .map(([content, count]) => `• ${content}: ${count} occurrences`)
-          .join('\n')
-      ].filter(Boolean).join('\n\n');
+        data.scene_frequency && "Visual Content Analysis:",
+        data.scene_frequency &&
+          Object.entries(data.scene_frequency)
+            .map(([content, count]) => `• ${content}: ${count} occurrences`)
+            .join("\n"),
+      ]
+        .filter(Boolean)
+        .join("\n\n");
 
       setSummaryText(summary);
     } catch (error) {
-      console.error('Error:', error);
-      setUrlError('Error analyzing video. Please try again.');
+      console.error("Error:", error);
+      setUrlError("Error analyzing video. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -64,7 +67,6 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      <Bubbles />
 
       <div className="container">
         <div className="form-container">
@@ -97,7 +99,7 @@ const Home = () => {
         {summaryText && !loading && (
           <div className="summary-container">
             <h2>Analysis Results</h2>
-            <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
               {summaryText}
             </pre>
           </div>

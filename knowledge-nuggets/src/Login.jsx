@@ -1,11 +1,14 @@
-import { useRef, useState, useEffect, useContext } from "react";
-import { Link } from "react-router-dom";
+import { useRef, useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./Form.css";
 import Bubbles from "./bubbles";
+import { auth } from "./firebase/firebase"; // Import your Firebase auth
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 const Login = () => {
   const userRef = useRef();
   const errRef = useRef();
+  const navigate = useNavigate(); // To navigate to Home.jsx
 
   const [user, setUser] = useState("");
   const [pwd, setPwd] = useState("");
@@ -20,11 +23,36 @@ const Login = () => {
     setErrMsg("");
   }, [user, pwd]);
 
+  useEffect(() => {
+    setUser("");
+    setPwd("");
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, user, pwd);
+      console.log("User logged in: ", userCredential.user);
+      setSuccess(true);
+      navigate("/home"); // Redirect to Home.jsx
+    } catch (error) {
+      console.error("Error logging in: ", error);
+      setErrMsg("Invalid username or password");
+      errRef.current.focus();
+    }
+  };
+
   return (
-<>
-  <Bubbles />
+    <>
       <section>
-        <form>
+        <p
+          ref={errRef}
+          className={errMsg ? "errmsg" : "offscreen"}
+          aria-live="assertive"
+        >
+          {errMsg}
+        </p>
+        <form onSubmit={handleSubmit}>
           <label htmlFor="username">Username:</label>
           <input
             type="text"
@@ -50,7 +78,6 @@ const Login = () => {
           Need an Account?
           <br />
           <span className="line">
-            {/*put router link here*/}
             <Link to="/register">Sign Up</Link>
           </span>
         </p>
@@ -58,4 +85,5 @@ const Login = () => {
     </>
   );
 };
+
 export default Login;
