@@ -38,7 +38,6 @@ const Profile = () => {
       <Navbar />
       <div className="profile-container">
         <div className="profile-left">
-          <h2>{userEmail}</h2>
           <h3>Summary List</h3>
           <ul className="summary-list">
             {summaries.map((summary, index) => (
