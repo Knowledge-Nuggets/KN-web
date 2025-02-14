@@ -71,17 +71,17 @@ const Home = () => {
 
       <div className="container">
         <div className="form-container">
-          <h1>Enter YouTube URL</h1>
+          <h1>Enter Video URL</h1>
           <form onSubmit={handleSubmit}>
             <input
               type="text"
-              placeholder="Enter YouTube Link"
+              placeholder="Enter Video Link"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               disabled={loading}
             />
             <button type="submit" disabled={loading}>
-              {loading ? "Analyzing..." : "Submit"}
+              {loading ? "Analyzing..." : "Generate Summary"}
             </button>
           </form>
 
@@ -112,6 +112,24 @@ const Home = () => {
             <p>This may take a few minutes depending on the video length.</p>
           </div>
         )}
+      </div>
+
+      <div className="how-to-container">
+        <h1>How to Use the Knowledge Nuggets?</h1>
+        <h2>You can easily summarize videos with just 3 simple steps</h2>
+        <div className="how-to">
+          <p>Step 1: Copy and Paste the Video Link.</p>
+        </div>
+
+        <div className="how-to">
+          <p>Step 2: Click Generate Summary.</p>
+        </div>
+
+        <div className="how-to">
+          <p>
+            Step 3: Read your generated summary to increase learning efficiency.
+          </p>
+        </div>
       </div>
     </>
   );

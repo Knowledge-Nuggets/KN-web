@@ -67,7 +67,7 @@ const Login = () => {
             </p>
             <h1>Login</h1>
             <form onSubmit={handleSubmit} autoComplete="off">
-              <label htmlFor="username">Username:</label>
+              <label htmlFor="username">Email:</label>
               <input
                 type="text"
                 id="username"

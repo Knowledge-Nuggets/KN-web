@@ -1,15 +1,9 @@
 /* Form.css */
-.split-screen {
-  display: flex;
-  width: 100vw;
-  height: 150vh;
-  overflow: hidden;
-}
 
 .split-screen {
   display: flex;
   width: 100vw;
-  height: 300vh;
+  height: 110vh;
 }
 
 .split-screen .left,
