@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   faCheck,
   faTimes,
@@ -18,6 +18,7 @@ const passwordRegex =
 const Register = () => {
   const userRef = useRef();
   const errRef = useRef();
+  const navigate = useNavigate(); // Initialize useNavigate for navigation
 
   const [user, setUser] = useState("");
   const [validName, setValidName] = useState(false);
@@ -77,6 +78,7 @@ const Register = () => {
       });
 
       setSuccess(true);
+      navigate("/login"); // Navigate to the login page on success
     } catch (error) {
       console.error("Error registering user: ", error);
       setErrMsg(error.message);
