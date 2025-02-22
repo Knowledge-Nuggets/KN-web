@@ -765,6 +765,3 @@ def main():
         except:
             pass
         raise
-
-if __name__ == "__main__":
-    main()

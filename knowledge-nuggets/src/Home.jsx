@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import "./Home.css";
 import Navbar from "./Navbar";
 import Bubbles from "./bubbles";
@@ -12,7 +13,7 @@ const Home = () => {
 
  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(watch\?v=[a-zA-Z0-9_-]{11}(&.*)?|.+\/videos\/[a-zA-Z0-9_-]{11})$/;
 
- const handleSubmit = (e) => {
+ const handleSubmit = async (e) => {
    e.preventDefault();
 
    if (!youtubeRegex.test(url)) {
