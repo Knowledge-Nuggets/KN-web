@@ -1,0 +1,22 @@
+to-do list:
+- drag and drop kasi hindi lang tayo yt (nag aaceppt ng mp4 files etc)
+- download button for doc pdf and txt
+- about us from home page when scrolling down
+- UI ng lahat tas kakabit ko nalang lmao eksdii
+- ideploy mo na ASAP para ma test ko kung pwede gawin vercell as server
+
+- maglagay ka na ng comment sa mga kailangan ilagay ng comment katulad ng history/user/password
+- kung hindi ko matapos AI in time patulong nalang sa firebase
+
+
+TO RUN THIS:
+cd .\robert-backend-stuff\
+ C:\Users\Zo\thesis\Knowledge-Nuggets\robert-backend-stuff> uvicorn main:app --reload
+
+gawa ka pa isa pang instance
+
+cd .\knowledge-nuggets\   
+PS C:\Users\Zo\thesis\Knowledge-Nuggets\knowledge-nuggets> npm run dev
+
+
+  ➜  Local:   http://localhost:5173/

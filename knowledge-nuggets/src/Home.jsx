@@ -4,77 +4,135 @@ import Navbar from "./Navbar";
 import Bubbles from "./bubbles";
 
 const Home = () => {
-  const [url, setUrl] = useState("");
-  const [submittedUrl, setSubmittedUrl] = useState("");
-  const [summaryText, setSummaryText] = useState("");
-  const [urlError, setUrlError] = useState(""); // Error state for URL
+ const [url, setUrl] = useState("");
+ const [submittedUrl, setSubmittedUrl] = useState("");
+ const [summaryData, setSummaryData] = useState(null);
+ const [urlError, setUrlError] = useState("");
+ const [loading, setLoading] = useState(false);
 
-  // Regex for YouTube URL validation
-  const youtubeRegex =
-    /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(watch\?v=[a-zA-Z0-9_-]{11}(&.*)?|.+\/videos\/[a-zA-Z0-9_-]{11})$/;
+ const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(watch\?v=[a-zA-Z0-9_-]{11}(&.*)?|.+\/videos\/[a-zA-Z0-9_-]{11})$/;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+ const handleSubmit = (e) => {
+   e.preventDefault();
 
-    // Validate the URL with the regex
-    if (!youtubeRegex.test(url)) {
-      setUrlError("Invalid YouTube URL. Please enter a valid link.");
-      return; // Stop further execution if URL is invalid
-    }
+   if (!youtubeRegex.test(url)) {
+     setUrlError("Invalid YouTube URL. Please enter a valid link.");
+     return;
+   }
 
-    setUrlError(""); // Clear error if URL is valid
-    setSubmittedUrl(url); // Update the submitted URL
+   setUrlError("");
+   setSubmittedUrl(url);
+   setLoading(true);
+   setSummaryData(null);
 
-    // Example of setting summary text
-    const newSummary =
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
-    setSummaryText(newSummary);
+   try {
+     const response = await fetch('http://localhost:8000/analyze-video', {
+       method: 'POST',
+       headers: {
+         'Content-Type': 'application/json',
+       },
+       body: JSON.stringify({ video_url: url }),
+     });
 
-    console.log("URL Submitted:", url);
-    console.log("Summary Text:", newSummary);
-  };
+     if (!response.ok) {
+       throw new Error(`HTTP error! status: ${response.status}`);
+     }
 
-  return (
-    <>
-      <Navbar />
-      <Bubbles />
+     const data = await response.json();
+     setSummaryData(data);
+   } catch (error) {
+     console.error('Error:', error);
+     setUrlError('Error analyzing video. Please try again.');
+   } finally {
+     setLoading(false);
+   }
+ };
 
-      <div className="container">
-        <div className="form-container">
-          <h1>Enter YouTube URL</h1>
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Enter YouTube Link"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-            />
-            <button type="submit">Submit</button>
-          </form>
+ return (
+   <>
+     <Navbar />
 
-          {/* Display the error message if URL is invalid */}
-          {urlError && <p className="error">{urlError}</p>}
+     <div className="container">
+       <div className="form-container">
+         <h1>Enter YouTube URL</h1>
+         <form onSubmit={handleSubmit}>
+           <input
+             type="text"
+             placeholder="Enter YouTube Link"
+             value={url}
+             onChange={(e) => setUrl(e.target.value)}
+             disabled={loading}
+           />
+           <button type="submit" disabled={loading}>
+             {loading ? "Analyzing..." : "Submit"}
+           </button>
+         </form>
 
-          <div className="result">
-            {submittedUrl && (
-              <>
-                <h2>You entered:</h2>
-                <p>{submittedUrl}</p>
-              </>
-            )}
-          </div>
-        </div>
+         {urlError && <p className="error">{urlError}</p>}
+       </div>
 
-        {/* Conditionally render the summary section */}
-        {summaryText && (
-          <div className="summary-container">
-            <h2>Summary</h2>
-            <p>{summaryText}</p>
-          </div>
-        )}
-      </div>
-    </>
-  );
+       {loading && (
+         <div className="summary-container">
+           <h2>Analyzing video...</h2>
+           <p>This may take a few minutes depending on the video length.</p>
+         </div>
+       )}
+
+       {summaryData && !loading && (
+         <div className="summary-container">
+           <h2>Video Analysis</h2>
+           
+           <div className="summary-section">
+             <h3>Content Classification</h3>
+             <p>
+               <strong>Primary Type:</strong> {summaryData.content_type} 
+               (Confidence: {(summaryData.type_confidence * 100).toFixed(2)}%)
+             </p>
+             
+             {summaryData.additional_types && summaryData.additional_types.length > 0 && (
+               <div>
+                 <strong>Additional Categories:</strong>
+                 <ul>
+                   {summaryData.additional_types.map((type, index) => (
+                     <li key={index}>
+                       {type.label} (Confidence: {(type.score * 100).toFixed(2)}%)
+                     </li>
+                   ))}
+                 </ul>
+               </div>
+             )}
+           </div>
+
+           <div className="summary-section">
+             <h3>Narrative Summary</h3>
+             <p>{summaryData.narrative}</p>
+           </div>
+
+           {summaryData.main_visual_elements && summaryData.main_visual_elements.length > 0 && (
+             <div className="summary-section">
+               <h3>Visual Content Analysis</h3>
+               <ul>
+                 {summaryData.main_visual_elements.map((element, index) => (
+                   <li key={index}>{element}</li>
+                 ))}
+               </ul>
+             </div>
+           )}
+
+           <div className="summary-section">
+             <h3>Technical Statistics</h3>
+             <ul>
+               <li>Total Scenes: {summaryData.technical_stats.total_scenes}</li>
+               <li>Average Confidence: {summaryData.technical_stats.avg_confidence.toFixed(2)}</li>
+               <li>Audio Available: {summaryData.technical_stats.has_audio ? 'Yes' : 'No'}</li>
+               <li>Captions Available: {summaryData.technical_stats.has_captions ? 'Yes' : 'No'}</li>
+             </ul>
+           </div>
+         </div>
+       )}
+     </div>
+   </>
+ );
 };
 
 export default Home;
