@@ -68,3 +68,8 @@ body {
 .logout-button:hover {
   background-color: #0056b3;
 }
+
+body {
+  margin: 0; /* Remove default body margin to ensure the navbar aligns properly */
+  padding-top: 4rem; /* Add padding equal to the navbar height to prevent content from being hidden underneath */
+}

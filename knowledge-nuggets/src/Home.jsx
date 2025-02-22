@@ -5,107 +5,122 @@ import Navbar from "./Navbar";
 import Bubbles from "./bubbles";
 
 const Home = () => {
-  const [url, setUrl] = useState("");
-  const [submittedUrl, setSubmittedUrl] = useState("");
-  const [summaryText, setSummaryText] = useState("");
-  const [urlError, setUrlError] = useState("");
-  const [loading, setLoading] = useState(false);
+ const [url, setUrl] = useState("");
+ const [submittedUrl, setSubmittedUrl] = useState("");
+ const [summaryData, setSummaryData] = useState(null);
+ const [urlError, setUrlError] = useState("");
+ const [loading, setLoading] = useState(false);
 
-  // Regex for YouTube URL validation
-  const youtubeRegex =
-    /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(watch\?v=[a-zA-Z0-9_-]{11}(&.*)?|.+\/videos\/[a-zA-Z0-9_-]{11})$/;
+ const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(watch\?v=[a-zA-Z0-9_-]{11}(&.*)?|.+\/videos\/[a-zA-Z0-9_-]{11})$/;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+   e.preventDefault();
 
-    // Validate the URL with the regex
-    if (!youtubeRegex.test(url)) {
-      setUrlError("Invalid YouTube URL. Please enter a valid link.");
-      return;
-    }
+   if (!youtubeRegex.test(url)) {
+     setUrlError("Invalid YouTube URL. Please enter a valid link.");
+     return;
+   }
 
-    setUrlError("");
-    setSubmittedUrl(url);
-    setLoading(true);
+   setUrlError("");
+   setSubmittedUrl(url);
+   setLoading(true);
+   setSummaryData(null);
 
-    try {
-      const response = await fetch("http://localhost:8000/analyze-video", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ video_url: url }),
-      });
+   try {
+     const response = await fetch('http://localhost:8000/analyze-video', {
+       method: 'POST',
+       headers: {
+         'Content-Type': 'application/json',
+       },
+       body: JSON.stringify({ video_url: url }),
+     });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+     if (!response.ok) {
+       throw new Error(`HTTP error! status: ${response.status}`);
+     }
 
-      const data = await response.json();
+     const data = await response.json();
+     setSummaryData(data);
+   } catch (error) {
+     console.error('Error:', error);
+     setUrlError('Error analyzing video. Please try again.');
+   } finally {
+     setLoading(false);
+   }
+ };
 
-      // Format the summary text
-      const summary = [
-        data.youtube_captions && `YouTube Captions: ${data.youtube_captions}`,
-        data.transcription && `Transcription: ${data.transcription}`,
-        data.scene_frequency && "Visual Content Analysis:",
-        data.scene_frequency &&
-          Object.entries(data.scene_frequency)
-            .map(([content, count]) => `• ${content}: ${count} occurrences`)
-            .join("\n"),
-      ]
-        .filter(Boolean)
-        .join("\n\n");
+ return (
+   <>
+     <Navbar />
 
-      setSummaryText(summary);
-    } catch (error) {
-      console.error("Error:", error);
-      setUrlError("Error analyzing video. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+     <div className="container">
+       <div className="form-container">
+         <h1>Enter YouTube URL</h1>
+         <form onSubmit={handleSubmit}>
+           <input
+             type="text"
+             placeholder="Enter YouTube Link"
+             value={url}
+             onChange={(e) => setUrl(e.target.value)}
+             disabled={loading}
+           />
+           <button type="submit" disabled={loading}>
+             {loading ? "Analyzing..." : "Submit"}
+           </button>
+         </form>
 
-  return (
-    <>
-      <Navbar />
+         {urlError && <p className="error">{urlError}</p>}
+       </div>
 
-      <div className="container">
-        <div className="form-container">
-          <h1>Enter Video URL</h1>
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Enter Video Link"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              disabled={loading}
-            />
-            <button type="submit" disabled={loading}>
-              {loading ? "Analyzing..." : "Generate Summary"}
-            </button>
-          </form>
+       {loading && (
+         <div className="summary-container">
+           <h2>Analyzing video...</h2>
+           <p>This may take a few minutes depending on the video length.</p>
+         </div>
+       )}
 
-          {urlError && <p className="error">{urlError}</p>}
+       {summaryData && !loading && (
+         <div className="summary-container">
+           <h2>Video Analysis</h2>
+           
+           <div className="summary-section">
+             <h3>Content Classification</h3>
+             <p>
+               <strong>Primary Type:</strong> {summaryData.content_type} 
+               (Confidence: {(summaryData.type_confidence * 100).toFixed(2)}%)
+             </p>
+             
+             {summaryData.additional_types && summaryData.additional_types.length > 0 && (
+               <div>
+                 <strong>Additional Categories:</strong>
+                 <ul>
+                   {summaryData.additional_types.map((type, index) => (
+                     <li key={index}>
+                       {type.label} (Confidence: {(type.score * 100).toFixed(2)}%)
+                     </li>
+                   ))}
+                 </ul>
+               </div>
+             )}
+           </div>
 
-          <div className="result">
-            {submittedUrl && !loading && (
-              <>
-                <h2>Analyzed URL:</h2>
-                <p>{submittedUrl}</p>
-              </>
-            )}
-          </div>
-        </div>
+           <div className="summary-section">
+             <h3>Narrative Summary</h3>
+             <p>{summaryData.narrative}</p>
+           </div>
 
-        {summaryText && !loading && (
-          <div className="summary-container">
-            <h2>Analysis Results</h2>
-            <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-              {summaryText}
-            </pre>
-          </div>
-        )}
+           {summaryData.main_visual_elements && summaryData.main_visual_elements.length > 0 && (
+             <div className="summary-section">
+               <h3>Visual Content Analysis</h3>
+               <ul>
+                 {summaryData.main_visual_elements.map((element, index) => (
+                   <li key={index}>{element}</li>
+                 ))}
+               </ul>
+             </div>
+           )}
 
+<<<<<<< HEAD
         {loading && (
           <div className="summary-container">
             <h2>Analyzing video...</h2>
@@ -133,6 +148,22 @@ const Home = () => {
       </div>
     </>
   );
+=======
+           <div className="summary-section">
+             <h3>Technical Statistics</h3>
+             <ul>
+               <li>Total Scenes: {summaryData.technical_stats.total_scenes}</li>
+               <li>Average Confidence: {summaryData.technical_stats.avg_confidence.toFixed(2)}</li>
+               <li>Audio Available: {summaryData.technical_stats.has_audio ? 'Yes' : 'No'}</li>
+               <li>Captions Available: {summaryData.technical_stats.has_captions ? 'Yes' : 'No'}</li>
+             </ul>
+           </div>
+         </div>
+       )}
+     </div>
+   </>
+ );
+>>>>>>> ef49d9845f500d79e07a140db3d32b2b28f40e00
 };
 
 export default Home;
