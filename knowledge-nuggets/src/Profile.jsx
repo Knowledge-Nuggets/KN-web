@@ -9,6 +9,7 @@ const Profile = () => {
   const [selectedSummary, setSelectedSummary] = useState(
     "Select a summary from the list."
   );
+  const [menuOpen, setMenuOpen] = useState(false); // State to control menu visibility
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -31,13 +32,14 @@ const Profile = () => {
 
   const handleSummaryClick = (index) => {
     setSelectedSummary(summaries[index]);
+    setMenuOpen(false); // Close the menu after selecting a summary
   };
 
   return (
     <>
       <Navbar />
       <div className="profile-container">
-        <div className="profile-left">
+        <div className={`profile-left ${menuOpen ? "open" : ""}`}>
           <h3>Summary List</h3>
           <ul className="summary-list">
             {summaries.map((summary, index) => (
@@ -48,6 +50,9 @@ const Profile = () => {
           </ul>
         </div>
         <div className="profile-right">
+          <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
+            ☰
+          </button>
           <h2>Summary</h2>
           <p>{selectedSummary}</p>
         </div>

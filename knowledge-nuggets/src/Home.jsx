@@ -115,7 +115,7 @@ const Home = () => {
       </div>
 
       <div className="how-to-container">
-        <h1>How to Use the Knowledge Nuggets?</h1>
+        <h1>How to Use Knowledge Nuggets?</h1>
         <h2>You can easily summarize videos with just 3 simple steps</h2>
         <div className="how-to">
           <p>Step 1: Copy and Paste the Video Link.</p>

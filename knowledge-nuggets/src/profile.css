@@ -23,11 +23,11 @@ body {
 
 /* Left Section (Sidebar) */
 .profile-left {
-  position: absolute;
-  margin-top: 60px;
+  position: relative;
+  margin-top: 35px;
   left: 0;
   top: 0;
-  height: 100vh;
+  height: calc(100vh - 60px);
   width: 250px;
   background-color: #f8f9fa;
   padding: 2rem;
@@ -37,6 +37,11 @@ body {
   border-right: 1px solid #ddd;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
+  transition: left 0.3s ease; /* Smooth transition for sidebar */
+}
+
+.profile-left.open {
+  left: 0; /* Show the sidebar when open */
 }
 
 .profile-left h2 {
@@ -73,7 +78,8 @@ body {
 
 /* Right Section (Content) */
 .profile-right {
-  margin-left: 250px; /* Pushes content to the right of the sidebar */
+  /* Pushes content to the right of the sidebar */
+  margin-top: 50px;
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
@@ -92,18 +98,33 @@ body {
   line-height: 1.6;
 }
 
+/* Hamburger Button */
+.hamburger {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  display: none; /* Hidden by default */
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .profile-left {
-    width: 100%;
-    height: auto;
-    position: relative;
-    border-right: none;
-    border-bottom: 1px solid #ddd;
+    position: fixed;
+    left: -250px; /* Hide the sidebar by default on mobile */
+  }
+
+  .profile-left.open {
+    left: 0; /* Show the sidebar when open */
   }
 
   .profile-right {
     margin-left: 0;
     padding: 1rem;
+  }
+
+  .hamburger {
+    display: block;
   }
 }
