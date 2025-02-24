@@ -9,6 +9,7 @@ const Home = () => {
   const [summaryData, setSummaryData] = useState(null);
   const [urlError, setUrlError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState(null);
 
   const youtubeRegex =
     /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(watch\?v=[a-zA-Z0-9_-]{11}(&.*)?|.+\/videos\/[a-zA-Z0-9_-]{11})$/;
@@ -49,6 +50,29 @@ const Home = () => {
     }
   };
 
+  const handleFileChange = (event) => {
+    const selectedFile = event.target.files[0];
+    if (selectedFile && selectedFile.type.startsWith("video/")) {
+      setFile(selectedFile);
+      console.log("Video file selected:", selectedFile.name);
+    } else {
+      console.log("Please select a valid video file.");
+    }
+  };
+
+  const handleFileUpload = (event) => {
+    event.preventDefault();
+    if (file) {
+      console.log("Saving video file:", file.name);
+      setTimeout(() => {
+        console.log("Video upload successful:", file.name);
+        setFile(null);
+      }, 2000); // Simulate a delay for the upload
+    } else {
+      console.log("No file selected.");
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -68,6 +92,23 @@ const Home = () => {
             </button>
           </form>
           {urlError && <p className="error">{urlError}</p>}
+
+          <form className="file-upload-form" onSubmit={handleFileUpload}>
+            <label className="file-upload-label" htmlFor="file">
+              <div className="file-upload-design">
+                <svg height="1em" viewBox="0 0 640 512">
+                  <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z"></path>
+                </svg>
+                <p>Drag and Drop</p>
+                <p>or</p>
+                <span className="browse-button">Browse file</span>
+              </div>
+              <input type="file" id="file" onChange={handleFileChange} />
+            </label>
+            <button type="submit" className="submit-button">
+              Upload Video
+            </button>
+          </form>
         </div>
 
         {loading && (
@@ -120,6 +161,7 @@ const Home = () => {
         )}
       </div>
 
+      {/* How-to section */}
       <div className="how-to-container">
         <h1>How to Use Knowledge Nuggets?</h1>
         <h2>You can easily summarize videos with just 3 simple steps</h2>

@@ -23,6 +23,7 @@ const Profile = () => {
     return () => unsubscribe();
   }, []);
 
+  //Put the summary generation from the database here
   const summaries = [
     "This is summary 1",
     "This is summary 2",
@@ -37,7 +38,10 @@ const Profile = () => {
 
   return (
     <>
+      {/*TODO: Will give the profile page its own navbar*/}
       <Navbar />
+
+      {/*Summary section*/}
       <div className="profile-container">
         <div className={`profile-left ${menuOpen ? "open" : ""}`}>
           <h3>Summary List</h3>
@@ -53,6 +57,7 @@ const Profile = () => {
           <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
             ☰
           </button>
+          {/*Summary display*/}
           <h2>Summary</h2>
           <p>{selectedSummary}</p>
         </div>
