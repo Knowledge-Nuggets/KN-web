@@ -9,6 +9,7 @@
 .split-screen .left,
 .split-screen .right {
   flex: 1;
+}
 /* Form.css */
 
 .split-screen {
@@ -72,6 +73,8 @@
 
 .split-screen .right {
   background: #f8f9fa; /* Light background for the form */
+}
+
 .split-screen .left {
   background: linear-gradient(
     135deg,
