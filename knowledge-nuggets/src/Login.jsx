@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Form.css";
-import Bubbles from "./bubbles";
+
 import { auth } from "./firebase/firebase"; // Import your Firebase auth
 import { signInWithEmailAndPassword } from "firebase/auth";
 
