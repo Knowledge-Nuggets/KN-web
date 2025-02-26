@@ -7,6 +7,7 @@ import "./Navbar.css";
 const Navbar = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // State for mobile menu
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -24,13 +25,29 @@ const Navbar = () => {
     }
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
+        {/* Logo */}
         <Link to="/home" className="navbar-logo">
-          Knowledge Nuggets
+          <img
+            src="assets/6.png"
+            alt="Knowledge Nuggets Logo"
+            className="logo"
+          />
         </Link>
-        <div className="nav-links">
+
+        {/* Hamburger Menu for Mobile */}
+        <button className="hamburger" onClick={toggleMenu}>
+          ☰
+        </button>
+
+        {/* Nav Links */}
+        <div className={`nav-links ${isMenuOpen ? "open" : ""}`}>
           <Link to="/profile" className="navbar-link">
             {currentUser ? currentUser.email : "Profile"}
           </Link>

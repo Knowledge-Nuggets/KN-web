@@ -1,11 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  faCheck,
-  faTimes,
-  faInfoCircle,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { app, auth, db } from "./firebase/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ref, set } from "firebase/database";
@@ -89,13 +83,21 @@ const Register = () => {
   return (
     <div className="split-screen">
       <div className="left">
-        <h1>Knowledge Nuggets</h1>
-        <h2>AI Video Summarization Tool for Learning</h2>
-        <br />
-        <p>
-          Knowledge Nuggets uses a customized AI to increase your efficiency in
-          learning
-        </p>
+        {/* Logo */}
+        <img
+          src="assets/vert_kn_logo.png"
+          alt="Knowledge Nuggets Logo"
+          className="logo"
+        />
+        {/* Info Section */}
+        <div className="info">
+          <h2>AI Video Summarization Tool for Learning</h2>
+          <br />
+          <p>
+            Knowledge Nuggets uses a customized AI to increase your efficiency
+            in learning
+          </p>
+        </div>
       </div>
       <div className="right">
         <section>
@@ -110,12 +112,8 @@ const Register = () => {
           <form onSubmit={handleSubmit}>
             <label htmlFor="email">
               Email:
-              <span className={validName ? "valid" : "hide"}>
-                <FontAwesomeIcon icon={faCheck} />
-              </span>
-              <span className={validName || !user ? "hide" : "invalid"}>
-                <FontAwesomeIcon icon={faTimes} />
-              </span>
+              <span className={validName ? "valid" : "hide"}>✓</span>
+              <span className={validName || !user ? "hide" : "invalid"}>✗</span>
             </label>
             <input
               type="text"
@@ -135,20 +133,13 @@ const Register = () => {
                 userFocus && user && !validName ? "instructions" : "offscreen"
               }
             >
-              <FontAwesomeIcon icon={faInfoCircle} />
               Invalid Email Format.
             </p>
 
             <label htmlFor="password">
               Password:
-              <FontAwesomeIcon
-                icon={faCheck}
-                className={validPwd ? "valid" : "hide"}
-              />
-              <FontAwesomeIcon
-                icon={faTimes}
-                className={validPwd || !pwd ? "hide" : "invalid"}
-              />
+              <span className={validPwd ? "valid" : "hide"}>✓</span>
+              <span className={validPwd || !pwd ? "hide" : "invalid"}>✗</span>
             </label>
             <input
               type="password"
@@ -165,7 +156,6 @@ const Register = () => {
               id="pwdnote"
               className={pwdFocus && !validPwd ? "instructions" : "offscreen"}
             >
-              <FontAwesomeIcon icon={faInfoCircle} />
               8 to 24 characters.
               <br />
               Must include uppercase and lowercase letters, a number and a
@@ -181,14 +171,12 @@ const Register = () => {
 
             <label htmlFor="confirm_pwd">
               Confirm Password:
-              <FontAwesomeIcon
-                icon={faCheck}
-                className={validMatch && matchPwd ? "valid" : "hide"}
-              />
-              <FontAwesomeIcon
-                icon={faTimes}
-                className={validMatch || !matchPwd ? "hide" : "invalid"}
-              />
+              <span className={validMatch && matchPwd ? "valid" : "hide"}>
+                ✓
+              </span>
+              <span className={validMatch || !matchPwd ? "hide" : "invalid"}>
+                ✗
+              </span>
             </label>
             <input
               type="password"
@@ -207,7 +195,6 @@ const Register = () => {
                 matchFocus && !validMatch ? "instructions" : "offscreen"
               }
             >
-              <FontAwesomeIcon icon={faInfoCircle} />
               Must match the first password input field.
             </p>
 

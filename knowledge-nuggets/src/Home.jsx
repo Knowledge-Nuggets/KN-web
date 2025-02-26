@@ -10,6 +10,16 @@ const Home = () => {
   const [urlError, setUrlError] = useState("");
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
+  const [activeName, setActiveName] = useState(null);
+  const [activeOption, setActiveOption] = useState("url"); // 'url' or 'file'
+
+  // Add team members array here
+  const teamMembers = [
+    { name: "Clarence Mauricio", img: "assets/Clarence.jpg" },
+    { name: "Robert Agomaa", img: "assets/Robert.jpg" },
+    { name: "Ysa Alvarez", img: "assets/Ysa.jpg" },
+    { name: "Jacques Hale", img: "assets/Jacques.jpg" },
+  ];
 
   const youtubeRegex =
     /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(watch\?v=[a-zA-Z0-9_-]{11}(&.*)?|.+\/videos\/[a-zA-Z0-9_-]{11})$/;
@@ -79,36 +89,59 @@ const Home = () => {
       <div className="container">
         <div className="form-container">
           <h1>Enter YouTube URL</h1>
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Enter YouTube Link"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              disabled={loading}
-            />
-            <button type="submit" disabled={loading}>
-              {loading ? "Analyzing..." : "Submit"}
-            </button>
-          </form>
-          {urlError && <p className="error">{urlError}</p>}
 
-          <form className="file-upload-form" onSubmit={handleFileUpload}>
-            <label className="file-upload-label" htmlFor="file">
-              <div className="file-upload-design">
-                <svg height="1em" viewBox="0 0 640 512">
-                  <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z"></path>
-                </svg>
-                <p>Drag and Drop</p>
-                <p>or</p>
-                <span className="browse-button">Browse file</span>
-              </div>
-              <input type="file" id="file" onChange={handleFileChange} />
-            </label>
-            <button type="submit" className="submit-button">
-              Upload Video
+          {/* Toggle Switch */}
+          <div className="toggle-container">
+            <button
+              className={`toggle-btn ${activeOption === "url" ? "active" : ""}`}
+              onClick={() => setActiveOption("url")}
+            >
+              Paste Link
             </button>
-          </form>
+            <button
+              className={`toggle-btn ${
+                activeOption === "file" ? "active" : ""
+              }`}
+              onClick={() => setActiveOption("file")}
+            >
+              Upload File
+            </button>
+          </div>
+
+          {activeOption === "url" ? (
+            // URL Input Form
+            <form onSubmit={handleSubmit}>
+              <input
+                type="text"
+                placeholder="Enter YouTube Link"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={loading}
+              />
+              <button type="submit" disabled={loading}>
+                {loading ? "Analyzing..." : "Submit"}
+              </button>
+              {urlError && <p className="error">{urlError}</p>}
+            </form>
+          ) : (
+            // File Upload Form
+            <form className="file-upload-form" onSubmit={handleFileUpload}>
+              <label className="file-upload-label" htmlFor="file">
+                <div className="file-upload-design">
+                  <svg height="1em" viewBox="0 0 640 512">
+                    <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z"></path>
+                  </svg>
+                  <p>Drag and Drop</p>
+                  <p>or</p>
+                  <span className="browse-button">Browse file</span>
+                </div>
+                <input type="file" id="file" onChange={handleFileChange} />
+              </label>
+              <button type="submit" className="submit-button">
+                Upload Video
+              </button>
+            </form>
+          )}
         </div>
 
         {loading && (
@@ -175,6 +208,46 @@ const Home = () => {
           <p>
             Step 3: Read your generated summary to increase learning efficiency.
           </p>
+        </div>
+      </div>
+
+      {/* About us section */}
+      <div className="about-us-section">
+        <h2>Meet Our Team</h2>
+        <div className="about-us-container">
+          {teamMembers.map((member, index) => (
+            <div
+              className="about-us-card"
+              key={index}
+              onMouseEnter={() => setActiveName(member.name)}
+              onMouseLeave={() => setActiveName(null)}
+            >
+              <div className="about-us-img">
+                <img src={member.img} alt={member.name} />
+                <div
+                  className={`name-overlay ${
+                    activeName === member.name ? "active" : ""
+                  }`}
+                >
+                  <h3>{member.name}</h3>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/*For whom the app is for section */}
+      <div className="for-who-container">
+        <h1>Especially Catered For You</h1>
+        <div className="for-who">
+          <img src="" alt="Students" />
+        </div>
+        <div className="for-who">
+          <img src="" alt="Researchers" />
+        </div>
+        <div className="for-who">
+          <img src="" alt="Professionals" />
         </div>
       </div>
     </>

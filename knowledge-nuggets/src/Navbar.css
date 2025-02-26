@@ -1,75 +1,128 @@
+/* Base Styles */
 body {
-  margin: 0; /* Remove default body margin to ensure the navbar aligns properly */
-  padding-top: 4rem; /* Add padding equal to the navbar height to prevent content from being hidden underneath */
-  font-family: "Arial", sans-serif; /* Set a clean font for the body */
+  margin: 0;
+  padding-top: 4rem; /* Padding to account for fixed navbar */
+  font-family: "Arial", sans-serif;
 }
 
+/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background-color: #f8f9fa; /* Light background color for the navbar */
-  color: #212529; /* Dark color for the text */
-  width: 100%; /* Make the navbar span the entire width */
-  position: fixed; /* Keep the navbar at the top */
+  padding: 0.5rem 2rem; /* Reduced padding to keep navbar compact */
+  background-color: #f8f9fa;
+  color: #212529;
+  width: 100%;
+  position: fixed;
   top: 0;
   left: 0;
-  z-index: 1000; /* Ensure the navbar is above other elements */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a subtle shadow for depth */
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%; /* Ensure the container spans the entire width */
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.navbar-logo {
-  margin: 0;
+/* Logo */
+.navbar-logo .logo {
+  height: 65px; /* Adjust logo height to keep navbar compact */
+  width: 150px;
+  max-width: 200px; /* Set a maximum width for the logo */
+  transition: transform 0.3s ease;
+}
+
+.navbar-logo:hover .logo {
+  transform: scale(1.05); /* Slight zoom on hover */
+}
+
+/* Hamburger Menu */
+.hamburger {
+  display: none; /* Hidden by default */
+  background: none;
+  border: none;
   font-size: 1.5rem;
-  color: #007bff; /* Blue color for the title */
-  text-decoration: none;
+  cursor: pointer;
 }
 
-.navbar-logo:hover {
-  color: #0056b3; /* Darker blue on hover */
-}
-
+/* Nav Links */
 .nav-links {
   display: flex;
   align-items: center;
+  gap: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.nav-links.open {
+  transform: translateX(0); /* Show menu on mobile */
 }
 
 .navbar-link {
-  margin-right: 1rem;
   font-size: 1rem;
-  color: #007bff; /* Blue color for the link */
+  color: #007bff;
   text-decoration: none;
+  transition: color 0.3s ease;
 }
 
 .navbar-link:hover {
   color: #0056b3;
 }
 
+/* Logout Button */
 .logout-button {
   padding: 0.5rem 1rem;
   background-color: #007bff;
   color: white;
-  text-decoration: none;
   border: none;
   border-radius: 0.5rem;
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .logout-button:hover {
   background-color: #0056b3;
+  transform: translateY(-2px); /* Slight lift on hover */
 }
 
-body {
-  margin: 0; /* Remove default body margin to ensure the navbar aligns properly */
-  padding-top: 4rem; /* Add padding equal to the navbar height to prevent content from being hidden underneath */
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block; /* Show hamburger on mobile */
+  }
+
+  .nav-links {
+    position: absolute;
+    top: 4rem; /* Align below navbar */
+    right: 0;
+    flex-direction: column;
+    background-color: #f8f9fa;
+    width: 100%;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateX(100%); /* Hide menu by default */
+  }
+
+  .nav-links.open {
+    transform: translateX(0); /* Show menu when open */
+  }
+
+  .navbar-link,
+  .logout-button {
+    width: 100%;
+    text-align: center;
+    margin: 0.5rem 0;
+  }
+
+  /* Adjust logo for mobile */
+  .navbar-logo .logo {
+    height: 35px; /* Smaller logo for mobile */
+    max-width: 150px; /* Adjust max-width for mobile */
+  }
 }

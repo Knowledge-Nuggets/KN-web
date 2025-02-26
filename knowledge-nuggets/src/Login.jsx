@@ -46,7 +46,13 @@ const Login = () => {
     <>
       <div className="split-screen">
         <div className="left">
-          <h1>Knowledge Nuggets</h1>
+          {/* Logo */}
+          <img
+            src="assets/5.png"
+            alt="Knowledge Nuggets Logo"
+            className="logo"
+          />
+          {/* Info Section */}
           <div className="info">
             <h2>AI Video Summarization Tool for Learning</h2>
             <br />
