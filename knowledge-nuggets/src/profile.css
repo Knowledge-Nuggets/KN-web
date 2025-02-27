@@ -73,6 +73,50 @@
   background: #10a37f;
 }
 
+.summary-item {
+  padding: 1rem;
+  margin: 0.5rem 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.summary-item:hover {
+  transform: translateX(5px);
+}
+
+.summary-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.summary-type {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.summary-preview {
+  color: #444;
+  line-height: 1.4;
+}
+
+.summary-content {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.summary-content h3 {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
 /* Right content area */
 .profile-right {
   flex: 1;

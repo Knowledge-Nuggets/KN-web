@@ -48,7 +48,7 @@ const Login = () => {
         <div className="left">
           {/* Logo */}
           <img
-            src="assets/5.png"
+            src="assets/kn-knowledge-nuggets.png"
             alt="Knowledge Nuggets Logo"
             className="logo"
           />

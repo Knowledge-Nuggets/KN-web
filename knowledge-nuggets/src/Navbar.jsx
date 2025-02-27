@@ -35,7 +35,7 @@ const Navbar = () => {
         {/* Logo */}
         <Link to="/home" className="navbar-logo">
           <img
-            src="assets/6.png"
+            src="assets/kn.png"
             alt="Knowledge Nuggets Logo"
             className="logo"
           />

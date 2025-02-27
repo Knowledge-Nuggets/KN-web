@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "./Home.css";
 import Navbar from "./Navbar";
+import { auth } from "./firebase/firebase"; // Import auth
+import { saveSummaryToDB } from "./firebase/firebaseHelpers"; // Import the helper function
 
 const Home = () => {
   const [url, setUrl] = useState("");
@@ -52,6 +54,17 @@ const Home = () => {
 
       const data = await response.json();
       setSummaryData(data);
+
+      // Save summary to Firebase if user is logged in
+      if (auth.currentUser) {
+        await saveSummaryToDB(auth.currentUser.uid, {
+          content: data.narrative,
+          videoUrl: url,
+          type: data.content_type,
+          visualElements: data.main_visual_elements || [],
+          timestamp: new Date().toISOString(),
+        });
+      }
     } catch (error) {
       console.error("Error:", error);
       setUrlError("Error analyzing video. Please try again.");
@@ -236,7 +249,8 @@ const Home = () => {
           ))}
         </div>
       </div>
-      {/*For who container */}
+
+      {/* For whom section */}
       <div className="for-who-container">
         <h1>Especially Catered For You</h1>
         <div className="for-who-grid">
