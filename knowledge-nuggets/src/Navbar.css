@@ -10,8 +10,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 2rem; /* Reduced padding to keep navbar compact */
-  background-color: #f8f9fa;
+  padding: 0.5rem 2rem;
+  background-color: rgba(248, 249, 250, 0.5);
   color: #212529;
   width: 100%;
   position: fixed;
@@ -19,6 +19,8 @@ body {
   left: 0;
   z-index: 1000;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  -webkit-backdrop-filter: blur(8px); /* Safari 9+ */
+  backdrop-filter: blur(8px); /* Standard syntax */
 }
 
 .navbar-container {
@@ -29,7 +31,6 @@ body {
   max-width: 1200px;
   margin: 0 auto;
 }
-
 /* Logo */
 .navbar-logo .logo {
   height: 65px; /* Adjust logo height to keep navbar compact */
@@ -47,8 +48,87 @@ body {
   display: none; /* Hidden by default */
   background: none;
   border: none;
-  font-size: 1.5rem;
   cursor: pointer;
+  padding: 0.5rem; /* Add padding for better click area */
+  width: 40px; /* Fixed width */
+  height: 40px; /* Fixed height */
+  position: relative; /* For positioning the lines */
+}
+
+/* Hamburger Icon Lines */
+.hamburger .line {
+  width: 100%; /* Full width of the container */
+  height: 3px; /* Thickness of the lines */
+  background-color: #ebeff4; /* Color of the lines */
+  position: absolute;
+  left: 0;
+  transition: all 0.3s ease;
+}
+
+/* Top Line */
+.hamburger .line:nth-child(1) {
+  top: 25%;
+}
+
+/* Middle Line */
+.hamburger .line:nth-child(2) {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Bottom Line */
+.hamburger .line:nth-child(3) {
+  bottom: 25%;
+}
+
+/* Hamburger Icon Animation on Open */
+.hamburger.open .line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger.open .line:nth-child(2) {
+  opacity: 0; /* Hide the middle line */
+}
+
+.hamburger.open .line:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block; /* Show hamburger on mobile */
+  }
+
+  .nav-links {
+    position: absolute;
+    top: 4rem; /* Align below navbar */
+    right: 0;
+    flex-direction: column;
+    background-color: #f8f9fa;
+    width: 100%;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateX(100%); /* Hide menu by default */
+    transition: transform 0.3s ease;
+  }
+
+  .nav-links.open {
+    transform: translateX(0); /* Show menu when open */
+  }
+
+  .navbar-link,
+  .logout-button {
+    width: 100%;
+    text-align: center;
+    margin: 0.5rem 0;
+  }
+
+  /* Adjust logo for mobile */
+  .navbar-logo .logo {
+    height: 35px; /* Smaller logo for mobile */
+    max-width: 150px; /* Adjust max-width for mobile */
+  }
 }
 
 /* Nav Links */

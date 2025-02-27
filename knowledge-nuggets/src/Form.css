@@ -32,12 +32,38 @@
 }
 
 /* Logo Styling */
+/* Logo Styling */
 .split-screen .left .logo {
-  width: 500px; /* Adjust the size as needed */
-
+  width: 100%; /* Make the logo responsive */
+  max-width: 500px; /* Set a maximum size for larger screens */
+  height: auto; /* Maintain aspect ratio */
   filter: drop-shadow(
-    0 2px 4px rgba(0, 0, 0, 0.2)
-  ); /* Optional: Add a subtle shadow */
+    0 4px 8px rgba(0, 0, 0, 0.3)
+  ); /* Stronger shadow for depth */
+  transition: transform 0.3s ease, filter 0.3s ease; /* Smooth hover effects */
+  margin-bottom: 2rem; /* Add spacing below the logo */
+}
+
+/* Hover effect for logo */
+.split-screen .left .logo:hover {
+  transform: scale(1.05); /* Slight zoom on hover */
+  filter: drop-shadow(
+    0 6px 12px rgba(0, 0, 0, 0.4)
+  ); /* Enhanced shadow on hover */
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .split-screen .left .logo {
+    max-width: 300px; /* Smaller logo for mobile */
+    margin-bottom: 1rem; /* Reduce spacing on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .split-screen .left .logo {
+    max-width: 200px; /* Even smaller logo for very small screens */
+  }
 }
 
 /* Info Section Styling */

@@ -13,7 +13,7 @@ body {
   font-family: "Rubik", sans-serif;
   overflow-x: hidden;
   /* Background image */
-  background-image: url("/assets/thesis_bg.jpg"); /* Added leading slash */
+  background-image: url("/assets/bg-2.jpg"); /* Added leading slash */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -25,11 +25,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(255, 255, 255, 0.95); /* Semi-transparent white */
+  background: rgba(255, 255, 255, 0.5); /* Adjusted transparency */
   font-family: "Rubik", sans-serif;
   border-radius: 20px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  width: 90%; /* Adjusted for better spacing */
+  width: 90%;
   max-width: 1200px;
   padding: 2rem;
   margin: 2rem auto;
@@ -53,7 +53,7 @@ body {
   width: 100%;
   position: relative;
   padding: 2rem;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.5); /* Adjusted transparency */
   border-radius: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   animation: slideIn 0.8s ease-in-out;
@@ -133,7 +133,7 @@ button:hover {
 .summary-container {
   margin-top: 2rem;
   padding: 2rem;
-  background-color: #f7f7f7;
+  background-color: rgba(247, 247, 247, 0.5); /* Adjusted transparency */
   border-radius: 12px;
   width: 100%;
   max-width: 800px;
@@ -261,7 +261,7 @@ button:hover {
 .how-to-container {
   text-align: center;
   padding: 3rem;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.5); /* Adjusted transparency */
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   border-radius: 20px;
   max-width: 800px;
@@ -304,7 +304,7 @@ button:hover {
 .about-us-section {
   padding: 4rem 2rem;
   text-align: center;
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.5); /* Adjusted transparency */
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   border-radius: 20px;
   margin: 3rem auto;
@@ -375,6 +375,130 @@ button:hover {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 500;
+}
+
+/* For Whom Section */
+.for-who-container {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: rgba(255, 255, 255, 0.5); /* Adjusted transparency */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  max-width: 1200px;
+  width: 90%;
+  margin: 3rem auto;
+  animation: fadeIn 1s ease-in-out;
+}
+.for-who-container h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 2rem;
+}
+
+.for-who-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.for-who-card {
+  background: #f9f9f9;
+  border-radius: 20px;
+  padding: 2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: slideIn 0.8s ease-in-out;
+}
+
+.for-who-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.for-who-image {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e3f2fd;
+  transition: transform 0.3s ease;
+}
+
+.for-who-card:hover .for-who-image {
+  transform: scale(1.1);
+}
+
+.for-who-image img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.for-who-card h3 {
+  font-size: 1.5rem;
+  color: #007bff;
+  margin-bottom: 1rem;
+}
+
+.for-who-card p {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .for-who-container {
+    padding: 2rem 1rem;
+  }
+
+  .for-who-container h1 {
+    font-size: 2rem;
+  }
+
+  .for-who-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .for-who-card {
+    padding: 1.5rem;
+  }
+
+  .for-who-image {
+    width: 100px;
+    height: 100px;
+  }
+
+  .for-who-image img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .for-who-card h3 {
+    font-size: 1.3rem;
+  }
+
+  .for-who-card p {
+    font-size: 0.9rem;
+  }
 }
 
 /* Responsive styles */

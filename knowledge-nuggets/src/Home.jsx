@@ -236,18 +236,50 @@ const Home = () => {
           ))}
         </div>
       </div>
-
-      {/*For whom the app is for section */}
+      {/*For who container */}
       <div className="for-who-container">
         <h1>Especially Catered For You</h1>
-        <div className="for-who">
-          <img src="" alt="Students" />
-        </div>
-        <div className="for-who">
-          <img src="" alt="Researchers" />
-        </div>
-        <div className="for-who">
-          <img src="" alt="Professionals" />
+        <div className="for-who-grid">
+          <div className="for-who-card">
+            <div className="for-who-image">
+              <img src="assets/student.png" alt="Students" />
+            </div>
+            <h3>Students</h3>
+            <p>
+              Quickly summarize lectures and educational videos to save time and
+              enhance learning.
+            </p>
+          </div>
+          <div className="for-who-card">
+            <div className="for-who-image">
+              <img src="assets/research.png" alt="Researchers" />
+            </div>
+            <h3>Researchers</h3>
+            <p>
+              Efficiently analyze long research videos and extract key insights
+              for your projects.
+            </p>
+          </div>
+          <div className="for-who-card">
+            <div className="for-who-image">
+              <img src="assets/professional.png" alt="Professionals" />
+            </div>
+            <h3>Professionals</h3>
+            <p>
+              Stay updated with industry trends by summarizing lengthy webinars
+              and presentations.
+            </p>
+          </div>
+          <div className="for-who-card">
+            <div className="for-who-image">
+              <img src="assets/creator.png" alt="Content Creators" />
+            </div>
+            <h3>Content Creators</h3>
+            <p>
+              Easily summarize long videos to create engaging content, scripts,
+              or captions for your audience.
+            </p>
+          </div>
         </div>
       </div>
     </>

@@ -42,8 +42,13 @@ const Navbar = () => {
         </Link>
 
         {/* Hamburger Menu for Mobile */}
-        <button className="hamburger" onClick={toggleMenu}>
-          ☰
+        <button
+          className={`hamburger ${isMenuOpen ? "open" : ""}`}
+          onClick={toggleMenu}
+        >
+          <div className="line"></div>
+          <div className="line"></div>
+          <div className="line"></div>
         </button>
 
         {/* Nav Links */}

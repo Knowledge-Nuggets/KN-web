@@ -84,11 +84,7 @@ const Register = () => {
     <div className="split-screen">
       <div className="left">
         {/* Logo */}
-        <img
-          src="assets/vert_kn_logo.png"
-          alt="Knowledge Nuggets Logo"
-          className="logo"
-        />
+        <img src="assets/5.png" alt="Knowledge Nuggets Logo" className="logo" />
         {/* Info Section */}
         <div className="info">
           <h2>AI Video Summarization Tool for Learning</h2>
