@@ -17,12 +17,12 @@ jobs:
       
       - name: Install dependencies
         run: |
-          cd knowledge-nuggets\dist
+          cd knowledge-nuggets.\dist
           npm ci
     
       - name: Build
         run: |
-          cd knowledge-nuggets\dist
+          cd knowledge-nuggets.\dist
           npm run build
     
       - name: Deploy to GitHub Pages
