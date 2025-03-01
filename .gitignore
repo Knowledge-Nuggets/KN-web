@@ -39,3 +39,6 @@ Thumbs.db
 temp/
 uploads/
 results/
+
+#vosk
+models/
