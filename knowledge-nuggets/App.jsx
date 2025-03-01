@@ -1,5 +1,5 @@
 import {
-  BrowserRouter as Router,
+  HashRouter as Router,
   Routes,
   Route,
   Navigate,
@@ -15,7 +15,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
-
         <Route path="/home" element={<PrivateRoute element={Home} />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
