@@ -3,8 +3,6 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
-    paths:
-      - 'knowledge-nuggets/**'
 
 jobs:
   build-and-deploy:
@@ -18,18 +16,13 @@ jobs:
           node-version: '18'
       
       - name: Install dependencies
-        run: |
-          cd knowledge-nuggets
-          npm ci
+        run: npm ci
       
       - name: Build
-        run: |
-          cd knowledge-nuggets
-          npm run build
+        run: npm run build
       
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./knowledge-nuggets/dist
-          publish_branch: gh-pages
+          publish_dir: ./dist
