@@ -17,7 +17,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import logging
+import uvicorn
+import nest_asyncio
+from pyngrok import ngrok
 
+ngrok_tunnel = ngrok.connect(8000)  
+print('Public URL:', ngrok_tunnel.public_url)
+
+nest_asyncio.apply()
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -494,4 +501,4 @@ async def cleanup_temp_files() -> Dict[str, str]:
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

@@ -7,7 +7,7 @@ import { saveSummaryToDB } from "./firebase/firebaseHelpers";
 import { FaFilePdf, FaFileWord, FaFileAlt } from 'react-icons/fa';
 
 // Define a consistent API base URL
-const API_BASE_URL = "http://localhost:8000";  // Use localhost or your server IP
+const API_BASE_URL = "https://55b1-64-224-129-43.ngrok-free.app";  // Use localhost or your server IP
 
 const Home = () => {
   const [url, setUrl] = useState("");
