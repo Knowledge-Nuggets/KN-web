@@ -1,10 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
 export default defineConfig({
+  base: '/Knowledge-Nuggets/',
   server: {
-     base: '/Knowledge-Nuggets/'
+    // server configuration if needed
   },
   plugins: [react()],
 })
