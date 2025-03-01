@@ -16,11 +16,15 @@ jobs:
           node-version: '18'
       
       - name: Install dependencies
-        run: npm ci
-      
+        run: |
+          cd knowledge-nuggets
+          npm ci
+    
       - name: Build
-        run: npm run build
-      
+        run: |
+          cd knowledge-nuggets
+          npm run build
+    
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
