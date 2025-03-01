@@ -2,10 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  root: ".", // Ensure this points to the root
+  plugins: [react()],
   build: {
-    outDir: "dist", // Make sure this is the correct output directory
+    outDir: "dist",  // Ensure the build output goes to 'dist/'
   },
-  base: "/Knowledge-Nuggets/", // Ensure this is set for GitHub Pages
+  base: "./",  // Important for GitHub Pages to serve files correctly
   plugins: [react()],
 })
