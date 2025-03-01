@@ -6,6 +6,6 @@ export default defineConfig({
   build: {
     outDir: "dist",  // Ensure the build output goes to 'dist/'
   },
-  base: "./",  // Important for GitHub Pages to serve files correctly
+  base: "/KN-web/",  // Important for GitHub Pages to serve files correctly
   plugins: [react()],
 })
