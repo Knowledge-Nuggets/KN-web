@@ -291,7 +291,11 @@ class EnhancedSummarizer:
             categories = [
                 "educational", "tutorial", "lecture", "documentary",
                 "entertainment", "vlog", "gaming", "comedy", 
-                "news", "analysis", "review", "sports"
+                "news", "analysis", "review", "sports", "podcast",
+                "music", "art", "cooking", "fashion", "travel",
+                "technology", "science", "history", "health", "fitness",
+                "business", "finance", "marketing", "motivation",
+                "social media", "productivity", "self-improvement"
             ]
             
             # Sanitize text before classification
