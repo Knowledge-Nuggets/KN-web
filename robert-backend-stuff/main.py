@@ -1,51 +1,41 @@
 import sys
 import os
 import uuid
-import shutil
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 import time
 from datetime import datetime
 import threading
 import json
 import queue
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from test_analyzer import OptimizedVideoBot
-
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import logging
 import uvicorn
-import nest_asyncio
-from pyngrok import ngrok
 
-ngrok_tunnel = ngrok.connect(8000)  
-print('Public URL:', ngrok_tunnel.public_url)
-
-nest_asyncio.apply()
-# Configure logging
+# Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# Initialize FastAPI app
 app = FastAPI()
 
+# Configure CORS - allow all origins since Cloudflare tunnel URL will change
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Frontend URL
+    allow_origins=["*"],  # Allow all origins for Cloudflare tunnel
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Create directories if they don't exist
+# Create directories
 UPLOAD_DIR = os.path.join(os.getcwd(), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 RESULTS_DIR = os.path.join(os.getcwd(), "results")
 os.makedirs(RESULTS_DIR, exist_ok=True)
-
 # Task queue and management
 class TaskManager:
     def __init__(self):
@@ -500,5 +490,10 @@ async def cleanup_temp_files() -> Dict[str, str]:
         raise HTTPException(status_code=500, detail=f"Cleanup failed: {str(e)}")
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    try:
+        print("Backend running at port 8000")
+        print("Use 'cloudflared tunnel --url http://localhost:8000' in another terminal")
+        print("Then update your frontend with the *.trycloudflare.com URL")
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+    except KeyboardInterrupt:
+        print("Shutting down server...")
