@@ -74,7 +74,7 @@ const Home = () => {
   // Fetch queue status
   const fetchQueueStatus = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/queue-status`);
+      const response = await fetch(`${apiBaseUrl}/queue-status`);
 
       if (response.ok) {
         const data = await response.json();
@@ -105,7 +105,7 @@ const Home = () => {
 
   const pollTaskStatus = async (taskId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/task-status/${taskId}`);
+      const response = await fetch(`${apiBaseUrl}/task-status/${taskId}`);
 
       if (!response.ok) {
         throw new Error(`Failed to get task status: ${response.status}`);
@@ -151,7 +151,7 @@ const Home = () => {
         // Otherwise fetch results from dedicated endpoint
         else {
           const resultResponse = await fetch(
-            `${API_BASE_URL}/results/${taskId}`
+            `${apiBaseUrl}/results/${taskId}`
           );
           if (resultResponse.ok) {
             const resultData = await resultResponse.json();
@@ -241,7 +241,7 @@ const Home = () => {
     if (!taskId) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/cancel-task/${taskId}`, {
+      const response = await fetch(`${apiBaseUrl}/cancel-task/${taskId}`, {
         method: "POST",
       });
 
@@ -279,7 +279,7 @@ const Home = () => {
     setQueuePosition(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/analyze-video`, {
+      const response = await fetch(`${apiBaseUrl}/analyze-video`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -354,7 +354,7 @@ const Home = () => {
       formData.append("file", file);
       formData.append("summary_length", summaryLength);
 
-      const uploadResponse = await fetch(`${API_BASE_URL}/upload-video`, {
+      const uploadResponse = await fetch(`${apiBaseUrl}/upload-video`, {
         method: "POST",
         body: formData,
       });
@@ -367,7 +367,7 @@ const Home = () => {
 
       // Now analyze the uploaded file
       const analysisResponse = await fetch(
-        `${API_BASE_URL}/analyze-local-video`,
+        `${apiBaseUrl}/analyze-local-video`,
         {
           method: "POST",
           headers: {
