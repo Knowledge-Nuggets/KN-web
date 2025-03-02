@@ -1,41 +1,39 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { saveAs } from 'file-saver';
-import { Document, Paragraph, HeadingLevel, Packer } from 'docx';
-import jsPDF from 'jspdf';
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import "./Home.css";
 import Navbar from "./Navbar";
 import { auth } from "./firebase/firebase";
 import { saveSummaryToDB } from "./firebase/firebaseHelpers";
-import { FaFilePdf, FaFileWord, FaFileAlt } from 'react-icons/fa';
+import { FaFilePdf, FaFileWord, FaFileAlt } from "react-icons/fa";
+import { Document, Paragraph, TextRun, HeadingLevel, Packer } from 'docx';
+import { saveAs } from 'file-saver';
+import { jsPDF } from 'jspdf';
+
+// Define a consistent API base URL
+const API_BASE_URL = "https://schools-vegetable-lighting-pvc.trycloudflare.com"; // Use localhost or your server IP
 
 const Home = () => {
-  // Configuration and API State
-  const [apiBaseUrl, setApiBaseUrl] = useState("");
-  const [apiUrlError, setApiUrlError] = useState(false);
-
-  // Video Input States
   const [url, setUrl] = useState("");
   const [submittedUrl, setSubmittedUrl] = useState("");
-  const [file, setFile] = useState(null);
-  const [videoUrl, setVideoUrl] = useState(null);
-
-  // Analysis States
   const [summaryData, setSummaryData] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [urlError, setUrlError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState("");
-  const [summaryLength, setSummaryLength] = useState("medium");
-  const [activeOption, setActiveOption] = useState("url");
+  const [activeName, setActiveName] = useState(null);
+  const [activeOption, setActiveOption] = useState("url"); // 'url' or 'file'
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [showAdditionalContent, setShowAdditionalContent] = useState(false);
+  const [summaryLength, setSummaryLength] = useState("medium"); // Options: "short", "medium", "long"
 
-  // Task Management States
+  // New state variables for queue system
   const [taskId, setTaskId] = useState(null);
   const [taskStatus, setTaskStatus] = useState(null);
+  const [pollingInterval, setPollingInterval] = useState(null);
   const [progress, setProgress] = useState(0);
   const [queuePosition, setQueuePosition] = useState(null);
-
-  // Polling Management
-  const pollingIntervalRef = useRef(null);
-  const queueStatusIntervalRef = useRef(null);
+  const [queueStatus, setQueueStatus] = useState(null);
+ 
 
 
   // Add team members array here
@@ -74,7 +72,7 @@ const Home = () => {
   // Fetch queue status
   const fetchQueueStatus = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/queue-status`);
+      const response = await fetch(`${API_BASE_URL}/queue-status`);
 
       if (response.ok) {
         const data = await response.json();
@@ -105,7 +103,7 @@ const Home = () => {
 
   const pollTaskStatus = async (taskId) => {
     try {
-      const response = await fetch(`${apiBaseUrl}/task-status/${taskId}`);
+      const response = await fetch(`${API_BASE_URL}/task-status/${taskId}`);
 
       if (!response.ok) {
         throw new Error(`Failed to get task status: ${response.status}`);
@@ -151,7 +149,7 @@ const Home = () => {
         // Otherwise fetch results from dedicated endpoint
         else {
           const resultResponse = await fetch(
-            `${apiBaseUrl}/results/${taskId}`
+            `${API_BASE_URL}/results/${taskId}`
           );
           if (resultResponse.ok) {
             const resultData = await resultResponse.json();
@@ -241,7 +239,7 @@ const Home = () => {
     if (!taskId) return;
 
     try {
-      const response = await fetch(`${apiBaseUrl}/cancel-task/${taskId}`, {
+      const response = await fetch(`${API_BASE_URL}/cancel-task/${taskId}`, {
         method: "POST",
       });
 
@@ -279,7 +277,7 @@ const Home = () => {
     setQueuePosition(null);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/analyze-video`, {
+      const response = await fetch(`${API_BASE_URL}/analyze-video`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -354,7 +352,7 @@ const Home = () => {
       formData.append("file", file);
       formData.append("summary_length", summaryLength);
 
-      const uploadResponse = await fetch(`${apiBaseUrl}/upload-video`, {
+      const uploadResponse = await fetch(`${API_BASE_URL}/upload-video`, {
         method: "POST",
         body: formData,
       });
@@ -367,7 +365,7 @@ const Home = () => {
 
       // Now analyze the uploaded file
       const analysisResponse = await fetch(
-        `${apiBaseUrl}/analyze-local-video`,
+        `${API_BASE_URL}/analyze-local-video`,
         {
           method: "POST",
           headers: {
