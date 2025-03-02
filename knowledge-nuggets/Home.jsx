@@ -5,6 +5,9 @@ import Navbar from "./Navbar";
 import { auth } from "./firebase/firebase";
 import { saveSummaryToDB } from "./firebase/firebaseHelpers";
 import { FaFilePdf, FaFileWord, FaFileAlt } from "react-icons/fa";
+import { Document, Paragraph, TextRun, HeadingLevel, Packer } from 'docx';
+import { saveAs } from 'file-saver';
+import { jsPDF } from 'jspdf';
 
 // Define a consistent API base URL
 const API_BASE_URL = "http://localhost:8000"; // Use localhost or your server IP
@@ -30,6 +33,8 @@ const Home = () => {
   const [progress, setProgress] = useState(0);
   const [queuePosition, setQueuePosition] = useState(null);
   const [queueStatus, setQueueStatus] = useState(null);
+ 
+
 
   // Add team members array here
   const teamMembers = [
@@ -398,14 +403,12 @@ const Home = () => {
 
   const downloadSummary = (format) => {
     if (!summaryData) return;
-    
-    let content = '';
+  
     let filename = `video-summary-${new Date().toISOString().slice(0, 10)}`;
-    let mime = '';
     
-    // Create content based on format
     if (format === 'txt') {
-      content = `VIDEO SUMMARY\n\n`;
+      // TXT format - keep as is
+      let content = `VIDEO SUMMARY\n\n`;
       content += `Content Type: ${summaryData.content_type}\n`;
       content += `Confidence: ${(summaryData.type_confidence * 100).toFixed(2)}%\n\n`;
       
@@ -442,73 +445,229 @@ const Home = () => {
       }
       
       filename += '.txt';
-      mime = 'text/plain';
-    } 
-    else if (format === 'docx' || format === 'pdf') {
-      // For simplicity, we'll use a basic HTML representation that can be opened in Word
-      content = `<html>
-        <head>
-          <meta charset="UTF-8">
-          <title>Video Summary</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 30px; }
-            h1 { color: #007bff; }
-            h2 { color: #343a40; margin-top: 20px; }
-            p { line-height: 1.6; }
-            .transcription { 
-              font-size: 0.9em; 
-              background-color: #f8f9fa; 
-              padding: 15px; 
-              border-radius: 5px;
-              border: 1px solid #dee2e6;
-              white-space: pre-wrap;
-              margin-top: 10px;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>VIDEO SUMMARY</h1>
-          <p><strong>Content Type:</strong> ${summaryData.content_type}</p>
-          <p><strong>Confidence:</strong> ${(summaryData.type_confidence * 100).toFixed(2)}%</p>
-          
-          ${summaryData.additional_types && summaryData.additional_types.length > 0 ? `
-          <h2>Additional Categories:</h2>
-          <ul>
-            ${summaryData.additional_types.map(type => 
-              `<li>${type.label} (${(type.score * 100).toFixed(2)}%)</li>`).join('')}
-          </ul>` : ''}
-          
-          <h2>SUMMARY:</h2>
-          <p>${summaryData.narrative}</p>  
-          
-          ${summaryData.transcriptions && summaryData.transcriptions.audio_transcription && 
-            summaryData.transcriptions.audio_transcription !== "[No audio found]" ? `
-            <h2>Audio Transcription:</h2>
-            <div class="transcription">${summaryData.transcriptions.audio_transcription}</div>
-          ` : ''}
-          
-          ${summaryData.transcriptions && summaryData.transcriptions.youtube_captions && 
-            summaryData.transcriptions.youtube_captions !== "[No captions available]" ? `
-            <h2>YouTube Captions:</h2>
-            <div class="transcription">${summaryData.transcriptions.youtube_captions}</div>
-          ` : ''}
-        </body>
-      </html>`;
       
-      filename += format === 'docx' ? '.html' : '.html'; // User can open this in Word or as PDF
-      mime = 'text/html';
+      // Create and download the file
+      const blob = new Blob([content], { type: 'text/plain' });
+      saveAs(blob, filename);
+    } 
+    else if (format === 'docx') {
+      // DOCX format using docx library
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: [
+            new Paragraph({
+              text: "VIDEO SUMMARY",
+              heading: HeadingLevel.HEADING_1,
+            }),
+            new Paragraph({
+              text: `Content Type: ${summaryData.content_type}`,
+            }),
+            new Paragraph({
+              text: `Confidence: ${(summaryData.type_confidence * 100).toFixed(2)}%`,
+            }),
+            new Paragraph({ text: "" }), // Empty line
+            
+            // Additional categories if available
+            ...(summaryData.additional_types && summaryData.additional_types.length > 0 ? [
+              new Paragraph({
+                text: "ADDITIONAL CATEGORIES",
+                heading: HeadingLevel.HEADING_2,
+              }),
+              ...summaryData.additional_types.map(type => 
+                new Paragraph({
+                  text: `- ${type.label} (${(type.score * 100).toFixed(2)}%)`,
+                })
+              ),
+              new Paragraph({ text: "" }), // Empty line
+            ] : []),
+            
+            // Summary
+            new Paragraph({
+              text: "SUMMARY",
+              heading: HeadingLevel.HEADING_2,
+            }),
+            new Paragraph({
+              text: summaryData.narrative,
+            }),
+            new Paragraph({ text: "" }), // Empty line
+            
+            // Visual elements if available
+            ...(summaryData.main_visual_elements && summaryData.main_visual_elements.length > 0 ? [
+              new Paragraph({
+                text: "VISUAL ELEMENTS",
+                heading: HeadingLevel.HEADING_2,
+              }),
+              ...summaryData.main_visual_elements.map(element => 
+                new Paragraph({
+                  text: `- ${element}`,
+                })
+              ),
+              new Paragraph({ text: "" }), // Empty line
+            ] : []),
+            
+            // Transcriptions if available
+            ...(summaryData.transcriptions && summaryData.transcriptions.audio_transcription && 
+                summaryData.transcriptions.audio_transcription !== "[No audio found]" ? [
+              new Paragraph({
+                text: "AUDIO TRANSCRIPTION",
+                heading: HeadingLevel.HEADING_2,
+              }),
+              new Paragraph({
+                text: summaryData.transcriptions.audio_transcription,
+              }),
+              new Paragraph({ text: "" }), // Empty line
+            ] : []),
+            
+            ...(summaryData.transcriptions && summaryData.transcriptions.youtube_captions && 
+                summaryData.transcriptions.youtube_captions !== "[No captions available]" ? [
+              new Paragraph({
+                text: "YOUTUBE CAPTIONS",
+                heading: HeadingLevel.HEADING_2,
+              }),
+              new Paragraph({
+                text: summaryData.transcriptions.youtube_captions,
+              }),
+            ] : []),
+          ],
+        }],
+      });
+  
+      // Generate and save the document
+      Packer.toBlob(doc).then(blob => {
+        saveAs(blob, filename + '.docx');
+      });
+    } 
+    else if (format === 'pdf') {
+      // PDF format using jsPDF
+      const doc = new jsPDF();
+      
+      // Set up some variables for formatting
+      let yPos = 20;
+      const leftMargin = 20;
+      const pageWidth = doc.internal.pageSize.width;
+      const lineHeight = 7;
+      
+      // Title
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('VIDEO SUMMARY', leftMargin, yPos);
+      yPos += lineHeight * 1.5;
+      
+      // Content type and confidence
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Content Type: ${summaryData.content_type}`, leftMargin, yPos);
+      yPos += lineHeight;
+      doc.text(`Confidence: ${(summaryData.type_confidence * 100).toFixed(2)}%`, leftMargin, yPos);
+      yPos += lineHeight * 1.5;
+      
+      // Additional categories
+      if (summaryData.additional_types && summaryData.additional_types.length > 0) {
+        doc.setFont('helvetica', 'bold');
+        doc.text('ADDITIONAL CATEGORIES', leftMargin, yPos);
+        yPos += lineHeight;
+        doc.setFont('helvetica', 'normal');
+        
+        summaryData.additional_types.forEach(type => {
+          doc.text(`- ${type.label} (${(type.score * 100).toFixed(2)}%)`, leftMargin, yPos);
+          yPos += lineHeight;
+        });
+        
+        yPos += lineHeight * 0.5;
+      }
+      
+      // Summary
+      doc.setFont('helvetica', 'bold');
+      doc.text('SUMMARY', leftMargin, yPos);
+      yPos += lineHeight;
+      doc.setFont('helvetica', 'normal');
+      
+      // Split summary into lines that fit the page width
+      const splitSummary = doc.splitTextToSize(summaryData.narrative, pageWidth - (leftMargin * 2));
+      
+      // Check if adding summary would overflow page
+      if (yPos + (splitSummary.length * lineHeight) > doc.internal.pageSize.height - 20) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      doc.text(splitSummary, leftMargin, yPos);
+      yPos += splitSummary.length * lineHeight + lineHeight;
+      
+      // Visual elements
+      if (summaryData.main_visual_elements && summaryData.main_visual_elements.length > 0) {
+        // Add new page if close to bottom
+        if (yPos > doc.internal.pageSize.height - 60) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text('VISUAL ELEMENTS', leftMargin, yPos);
+        yPos += lineHeight;
+        doc.setFont('helvetica', 'normal');
+        
+        summaryData.main_visual_elements.forEach(element => {
+          const splitElement = doc.splitTextToSize(`- ${element}`, pageWidth - (leftMargin * 2));
+          doc.text(splitElement, leftMargin, yPos);
+          yPos += splitElement.length * lineHeight;
+        });
+        
+        yPos += lineHeight * 0.5;
+      }
+      
+      // Transcriptions if available - only include if selected or necessary
+      if (summaryData.transcriptions) {
+        // Audio transcription
+        if (summaryData.transcriptions.audio_transcription && 
+            summaryData.transcriptions.audio_transcription !== "[No audio found]") {
+          
+          // Add new page for transcription
+          doc.addPage();
+          yPos = 20;
+          
+          doc.setFont('helvetica', 'bold');
+          doc.text('AUDIO TRANSCRIPTION', leftMargin, yPos);
+          yPos += lineHeight;
+          doc.setFont('helvetica', 'normal');
+          
+          const splitTranscription = doc.splitTextToSize(
+            summaryData.transcriptions.audio_transcription, 
+            pageWidth - (leftMargin * 2)
+          );
+          
+          doc.text(splitTranscription, leftMargin, yPos);
+          yPos += splitTranscription.length * lineHeight + lineHeight;
+        }
+        
+        // YouTube captions
+        if (summaryData.transcriptions.youtube_captions && 
+            summaryData.transcriptions.youtube_captions !== "[No captions available]") {
+          
+          // Add new page for captions
+          doc.addPage();
+          yPos = 20;
+          
+          doc.setFont('helvetica', 'bold');
+          doc.text('YOUTUBE CAPTIONS', leftMargin, yPos);
+          yPos += lineHeight;
+          doc.setFont('helvetica', 'normal');
+          
+          const splitCaptions = doc.splitTextToSize(
+            summaryData.transcriptions.youtube_captions, 
+            pageWidth - (leftMargin * 2)
+          );
+          
+          doc.text(splitCaptions, leftMargin, yPos);
+        }
+      }
+      
+      // Save the PDF
+      doc.save(filename + '.pdf');
     }
-    
-    // Create blob and download
-    const blob = new Blob([content], { type: mime });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
-
+  
   return (
     <>
       <Navbar />
