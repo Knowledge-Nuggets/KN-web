@@ -1,39 +1,41 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { saveAs } from 'file-saver';
+import { Document, Paragraph, HeadingLevel, Packer } from 'docx';
+import jsPDF from 'jspdf';
 import { Link } from "react-router-dom";
-import "./Home.css";
 import Navbar from "./Navbar";
 import { auth } from "./firebase/firebase";
 import { saveSummaryToDB } from "./firebase/firebaseHelpers";
-import { FaFilePdf, FaFileWord, FaFileAlt } from "react-icons/fa";
-import { Document, Paragraph, TextRun, HeadingLevel, Packer } from 'docx';
-import { saveAs } from 'file-saver';
-import { jsPDF } from 'jspdf';
-
-// Define a consistent API base URL
-const API_BASE_URL = "http://localhost:8000"; // Use localhost or your server IP
+import { FaFilePdf, FaFileWord, FaFileAlt } from 'react-icons/fa';
 
 const Home = () => {
+  // Configuration and API State
+  const [apiBaseUrl, setApiBaseUrl] = useState("");
+  const [apiUrlError, setApiUrlError] = useState(false);
+
+  // Video Input States
   const [url, setUrl] = useState("");
   const [submittedUrl, setSubmittedUrl] = useState("");
-  const [summaryData, setSummaryData] = useState(null);
-  const [urlError, setUrlError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
-  const [fileError, setFileError] = useState("");
-  const [activeName, setActiveName] = useState(null);
-  const [activeOption, setActiveOption] = useState("url"); // 'url' or 'file'
   const [videoUrl, setVideoUrl] = useState(null);
-  const [showAdditionalContent, setShowAdditionalContent] = useState(false);
-  const [summaryLength, setSummaryLength] = useState("medium"); // Options: "short", "medium", "long"
 
-  // New state variables for queue system
+  // Analysis States
+  const [summaryData, setSummaryData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [urlError, setUrlError] = useState("");
+  const [fileError, setFileError] = useState("");
+  const [summaryLength, setSummaryLength] = useState("medium");
+  const [activeOption, setActiveOption] = useState("url");
+
+  // Task Management States
   const [taskId, setTaskId] = useState(null);
   const [taskStatus, setTaskStatus] = useState(null);
-  const [pollingInterval, setPollingInterval] = useState(null);
   const [progress, setProgress] = useState(0);
   const [queuePosition, setQueuePosition] = useState(null);
-  const [queueStatus, setQueueStatus] = useState(null);
- 
+
+  // Polling Management
+  const pollingIntervalRef = useRef(null);
+  const queueStatusIntervalRef = useRef(null);
 
 
   // Add team members array here
@@ -667,7 +669,7 @@ const Home = () => {
       doc.save(filename + '.pdf');
     }
   };
-  
+
   return (
     <>
       <Navbar />
