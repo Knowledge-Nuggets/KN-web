@@ -116,44 +116,64 @@ body {
   border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
-}
-
-.profile-button:hover {
-  background: #007bff15;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+  vertical-align: middle;
+  line-height: 1.5;
+  margin: 2px 0; /* Compensate for border difference */
 }
 
 /* Logout Button */
 .logout-button {
-  padding: 0.6rem 1.2rem;
+  padding: 0.7rem 1.2rem; /* Compensate for missing border */
   background: #dc3545;
   color: white;
-  border: none;
+  border: 2px solid transparent;
   border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  vertical-align: middle;
+  line-height: 1.5;
+}
+
+/* Unified Hover Effects */
+.profile-button:hover,
+.logout-button:hover {
+  transform: translateY(-2px) scale(1.02);
+  opacity: 0.95;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.profile-button:hover {
+  background: #007bff11;
+  box-shadow: 0 2px 12px rgba(0, 123, 255, 0.2);
 }
 
 .logout-button:hover {
   background: #bb2d3b;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+  box-shadow: 0 2px 12px rgba(220, 53, 69, 0.2);
 }
 
-/* Icon styling */
+/* Active State */
+.profile-button:active,
+.logout-button:active {
+  transform: translateY(1px) scale(0.98);
+  transition-duration: 0.1s;
+}
+
+/* Icon Alignment */
 .icon {
   width: 1.2rem;
   height: 1.2rem;
+  vertical-align: middle;
+  margin-top: -2px; /* Optical alignment adjustment */
 }
 
 /* Responsive Design */
