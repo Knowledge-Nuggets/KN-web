@@ -53,9 +53,12 @@ const Navbar = () => {
 
         {/* Nav Links */}
         <div className={`nav-links ${isMenuOpen ? "open" : ""}`}>
-          <Link to="/profile" className="navbar-link">
-            {currentUser ? currentUser.email : "Profile"}
-          </Link>
+          <button
+            onClick={() => (window.location.href = "/profile")}
+            className="logout-button"
+          >
+            Profile
+          </button>
           <button onClick={handleLogout} className="logout-button">
             Logout
           </button>
