@@ -52,13 +52,11 @@ const Navbar = () => {
         </button>
 
         {/* Nav Links */}
+        {/* Nav Links */}
         <div className={`nav-links ${isMenuOpen ? "open" : ""}`}>
-          <button
-            onClick={() => (window.location.href = "/profile")}
-            className="logout-button"
-          >
+          <Link to="/profile" className="logout-button">
             Profile
-          </button>
+          </Link>
           <button onClick={handleLogout} className="logout-button">
             Logout
           </button>
