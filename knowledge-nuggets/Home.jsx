@@ -10,7 +10,7 @@ import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 
 // Define a consistent API base URL
-const API_BASE_URL = "https://dod-journals-ver-conditioning.trycloudflare.com "; // Use localhost or your server IP
+const API_BASE_URL = "https://dod-journals-ver-conditioning.trycloudflare.com"; // Use localhost or your server IP
 
 const Home = () => {
   const [url, setUrl] = useState("");

@@ -22,6 +22,7 @@ from datetime import datetime
 import timm
 import gc
 import time
+from main import CancellationError, CancellationToken
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -102,10 +103,11 @@ class EnhancedSummarizer:
         self.summary_length = summary_length
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.setup_torch_optimizations()
-        self.load_models()
         
         # Store cancellation token if provided
         self.cancellation_token = cancellation_token
+        
+        self.load_models()
         
     def check_cancellation(self):
         """Check if processing should be cancelled and raise exception if so."""
