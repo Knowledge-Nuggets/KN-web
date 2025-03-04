@@ -6,8 +6,7 @@ import { ref, set } from "firebase/database";
 import "./Form.css"; // Ensure this includes the new styles
 
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-const passwordRegex =
-  /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d])[\s\S]{8,}$/;
 
 const Register = () => {
   const userRef = useRef();
