@@ -1,19 +1,26 @@
 import sys
 import os
 import uuid
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Generator, Tuple
 import time
 from datetime import datetime
 import threading
 import json
 import queue
+import multiprocessing
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import logging
 import uvicorn
-from test_analyzer import OptimizedVideoBot
+import re
+import gc
+import torch
+import numpy as np
+import cv2
+from contextlib import contextmanager
+import signal
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -37,6 +44,53 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 RESULTS_DIR = os.path.join(os.getcwd(), "results")
 os.makedirs(RESULTS_DIR, exist_ok=True)
+
+# Cancellation support classes
+class CancellationError(Exception):
+    """Exception raised when an operation is cancelled."""
+    pass
+
+class CancellationToken:
+    """A token that can be used to signal cancellation to long-running operations."""
+    def __init__(self):
+        self._cancelled = False
+        self._lock = threading.Lock()
+
+    def cancel(self):
+        """Signal cancellation."""
+        with self._lock:
+            self._cancelled = True
+
+    @property
+    def cancelled(self):
+        """Check if cancellation has been requested."""
+        with self._lock:
+            return self._cancelled
+
+    def check_cancelled(self):
+        """Check if cancelled and raise CancellationError if so."""
+        if self.cancelled:
+            raise CancellationError("Operation was cancelled")
+
+class ModelLoadError(Exception):
+    """Specific error for model loading failures."""
+    pass
+
+@contextmanager
+def timeout(seconds):
+    """Context manager for timeouts using signals."""
+    def timeout_handler(signum, frame):
+        raise TimeoutError(f"Function timed out after {seconds} seconds")
+
+    original_handler = signal.getsignal(signal.SIGALRM)
+    try:
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(seconds)
+        yield
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, original_handler)
+
 # Task queue and management
 class TaskManager:
     def __init__(self):
@@ -45,6 +99,7 @@ class TaskManager:
         self.active_task = None
         self.lock = threading.Lock()
         self.processing_event = threading.Event()
+        self.cancellation_tokens = {}  # Map of task_id to cancellation token
         
         # Start worker thread
         self.worker = threading.Thread(target=self._worker_thread, daemon=True)
@@ -70,22 +125,47 @@ class TaskManager:
                 task_type = task_data["type"]
                 params = task_data["params"]
                 
+                # Check if task was cancelled before it started
+                if self._is_cancelled(task_id):
+                    logger.info(f"Task {task_id} was cancelled before processing started")
+                    self._update_task_status(task_id, "canceled")
+                    self.task_queue.task_done()
+                    continue
+                
                 # Set active task and signal processing started
                 with self.lock:
                     self.active_task = task_id
                 self.processing_event.set()
                 
-                # Process the task
+                # Process the task with cancellation support
                 self._update_task_status(task_id, "processing", progress=0.1)
                 
                 try:
+                    # Get cancellation token for this task
+                    token = self.cancellation_tokens.get(task_id)
+                    if not token:
+                        # Create a new token if one doesn't exist
+                        token = CancellationToken()
+                        with self.lock:
+                            self.cancellation_tokens[task_id] = token
+                    
                     if task_type == "youtube":
-                        self._process_youtube_video(task_id, params["video_url"], params["summary_length"])
+                        self._process_youtube_video(task_id, params["video_url"], params["summary_length"], token)
                     elif task_type == "local":
-                        self._process_local_video(task_id, params["file_path"], params["summary_length"])
+                        self._process_local_video(task_id, params["file_path"], params["summary_length"], token)
+                
+                except CancellationError:
+                    logger.info(f"Task {task_id} was cancelled during processing")
+                    self._update_task_status(task_id, "canceled")
+                
                 except Exception as e:
                     logger.error(f"Error processing task {task_id}: {str(e)}")
                     self._update_task_status(task_id, "failed", error=str(e))
+                
+                finally:
+                    # Clean up cancellation token
+                    with self.lock:
+                        self.cancellation_tokens.pop(task_id, None)
                 
                 # Mark task as done in the queue
                 self.task_queue.task_done()
@@ -102,22 +182,35 @@ class TaskManager:
                 self.processing_event.clear()
                 time.sleep(1)  # Avoid tight loop on errors
     
-    def _process_youtube_video(self, task_id, video_url, summary_length):
-        """Process a YouTube video."""
+    def _process_youtube_video(self, task_id, video_url, summary_length, token):
+        """Process a YouTube video with cancellation support."""
+        # Import locally to avoid circular imports
+        from test_analyzer import OptimizedVideoBot
+        
         bot = None
         try:
             logger.info(f"Starting YouTube video analysis for task {task_id}")
-            bot = OptimizedVideoBot(sample_rate=10, summary_length=summary_length)
+            
+            # Create OptimizedVideoBot with cancellation token
+            bot = OptimizedVideoBot(sample_rate=10, summary_length=summary_length, 
+                                   cancellation_token=token)
+            
+            # Check cancellation periodically
+            token.check_cancelled()
             
             # Update progress after initialization
             self._update_task_status(task_id, "processing", progress=0.2)
             
-            # Process video
+            # Process video with cancellation support
             bot.process_video(video_url, is_youtube_url=True)
+            
+            token.check_cancelled()
             self._update_task_status(task_id, "processing", progress=0.6)
             
             # Generate summary
             summary = bot.generate_summary()
+            
+            token.check_cancelled()
             self._update_task_status(task_id, "processing", progress=0.8)
             
             # Generate interpreted summary
@@ -133,6 +226,10 @@ class TaskManager:
             
             logger.info(f"Completed YouTube video analysis for task {task_id}")
             
+        except CancellationError:
+            # Propagate cancellation
+            raise
+            
         except Exception as e:
             logger.error(f"Error processing YouTube video: {str(e)}")
             self._update_task_status(task_id, "failed", error=str(e))
@@ -142,8 +239,11 @@ class TaskManager:
             if bot:
                 bot.cleanup()
     
-    def _process_local_video(self, task_id, file_path, summary_length):
-        """Process a local video file."""
+    def _process_local_video(self, task_id, file_path, summary_length, token):
+        """Process a local video file with cancellation support."""
+        # Import locally to avoid circular imports
+        from test_analyzer import OptimizedVideoBot
+        
         bot = None
         try:
             logger.info(f"Starting local video analysis for task {task_id}")
@@ -151,15 +251,23 @@ class TaskManager:
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"Video file not found: {file_path}")
             
-            bot = OptimizedVideoBot(sample_rate=10, summary_length=summary_length)
+            # Create OptimizedVideoBot with cancellation token
+            bot = OptimizedVideoBot(sample_rate=10, summary_length=summary_length,
+                                   cancellation_token=token)
+                                   
+            token.check_cancelled()
             self._update_task_status(task_id, "processing", progress=0.2)
             
-            # Process video
+            # Process video with cancellation support
             bot.process_video(file_path, is_youtube_url=False)
+            
+            token.check_cancelled()
             self._update_task_status(task_id, "processing", progress=0.6)
             
             # Generate summary
             summary = bot.generate_summary()
+            
+            token.check_cancelled()
             self._update_task_status(task_id, "processing", progress=0.8)
             
             # Generate interpreted summary
@@ -180,6 +288,10 @@ class TaskManager:
                 os.remove(file_path)
                 logger.info(f"Temporary file removed: {file_path}")
                 
+        except CancellationError:
+            # Propagate cancellation
+            raise
+            
         except Exception as e:
             logger.error(f"Error processing local video: {str(e)}")
             self._update_task_status(task_id, "failed", error=str(e))
@@ -193,6 +305,12 @@ class TaskManager:
         finally:
             if bot:
                 bot.cleanup()
+    
+    def _is_cancelled(self, task_id):
+        """Check if a task has been cancelled."""
+        with self.lock:
+            token = self.cancellation_tokens.get(task_id)
+            return token.cancelled if token else False
     
     def add_task(self, task_type, **params):
         """Add a task to the queue."""
@@ -210,6 +328,9 @@ class TaskManager:
                 "updated_at": datetime.now().isoformat(),
                 "progress": 0.0
             }
+            
+            # Create a cancellation token for this task
+            self.cancellation_tokens[task_id] = CancellationToken()
         
         # Add to processing queue
         self.task_queue.put({
@@ -273,22 +394,41 @@ class TaskManager:
                 self.tasks[task_id]["error"] = error
     
     def cancel_task(self, task_id):
-        """Cancel a task if possible."""
+        """Cancel a task with true interruption support."""
         with self.lock:
             if task_id not in self.tasks:
                 return False
             
             current_status = self.tasks[task_id]["status"]
+            
+            # Can't cancel completed or already canceled tasks
+            if current_status in ["completed", "failed", "canceled"]:
+                return False
+                
+            # Get the cancellation token for this task
+            token = self.cancellation_tokens.get(task_id)
+            
             if current_status == "queued":
                 # For queued tasks, we can just mark them as canceled
                 self.tasks[task_id]["status"] = "canceled"
                 self.tasks[task_id]["updated_at"] = datetime.now().isoformat()
+                
+                # Set the cancellation token if it exists
+                if token:
+                    token.cancel()
+                    
                 return True
+                
             elif current_status == "processing" and task_id == self.active_task:
-                # Can't cleanly cancel a task that's already processing,
-                # but we can mark it so a frontend can show it as canceled
+                # For processing tasks, mark as canceling and trigger interruption
                 self.tasks[task_id]["status"] = "canceling"
                 self.tasks[task_id]["updated_at"] = datetime.now().isoformat()
+                
+                # Set the cancellation token to trigger interruption
+                if token:
+                    token.cancel()
+                    logger.info(f"Cancellation signal sent to task {task_id}")
+                
                 return True
             
             return False
@@ -399,7 +539,7 @@ async def get_queue_status() -> Dict[str, Any]:
     """Get overall queue status."""
     try:
         # Count tasks by status
-        counts = {"queued": 0, "processing": 0, "completed": 0, "failed": 0, "canceled": 0}
+        counts = {"queued": 0, "processing": 0, "completed": 0, "failed": 0, "canceled": 0, "canceling": 0}
         
         # Get list of tasks in queue by creation time
         queued_tasks = []
@@ -430,7 +570,8 @@ async def get_queue_status() -> Dict[str, Any]:
                         "task_id": task_manager.active_task,
                         "progress": task_data.get("progress", 0),
                         "type": task_data.get("type"),
-                        "started_at": task_data.get("updated_at")
+                        "started_at": task_data.get("updated_at"),
+                        "status": task_data.get("status", "processing")
                     }
         
         return {
@@ -465,16 +606,28 @@ async def get_results(task_id: str) -> Dict[str, Any]:
 
 @app.post("/cancel-task/{task_id}")
 async def cancel_task(task_id: str) -> Dict[str, str]:
-    """Cancel a task if possible."""
+    """Cancel a task with true interruption capability."""
     try:
         success = task_manager.cancel_task(task_id)
         if success:
-            return {"task_id": task_id, "status": "canceled"}
+            # Get the current status to return
+            status = task_manager.get_task_status(task_id)
+            return {
+                "task_id": task_id, 
+                "status": status.get("status", "canceled"),
+                "message": "Cancellation signal sent successfully"
+            }
         else:
-            return {"task_id": task_id, "status": "could not cancel"}
+            # Task couldn't be cancelled
+            status = task_manager.get_task_status(task_id)
+            return {
+                "task_id": task_id,
+                "status": status.get("status", "unknown"),
+                "message": "Could not cancel task - it may be completed, failed, or not found"
+            }
     except Exception as e:
-        logger.error(f"Error canceling task: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error canceling task: {e}")
+        raise HTTPException(status_code=500, detail=f"Error canceling task: {str(e)}")
 
 # Cleanup route for manual cleanup if needed
 @app.post("/cleanup")

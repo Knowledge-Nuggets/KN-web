@@ -22,6 +22,7 @@ from datetime import datetime
 import timm
 import gc
 import time
+from main import CancellationError, CancellationToken
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -95,15 +96,25 @@ def collate_frames(batch):
     return torch.cat(batch, dim=0)  # Use cat instead of stack to avoid extra copy
 
 class EnhancedSummarizer:
-    """Improved summarizer with better hallucination prevention and content classification."""
+    """Improved summarizer with better hallucination prevention, content classification, and cancellation support."""
     
-    def __init__(self, summary_length="medium"):
-        """Initialize with configurable summary length."""
+    def __init__(self, summary_length="medium", cancellation_token=None):
+        """Initialize with configurable summary length and cancellation support."""
         self.summary_length = summary_length
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.setup_torch_optimizations()
+        
+        # Store cancellation token if provided
+        self.cancellation_token = cancellation_token
+        
         self.load_models()
         
+    def check_cancellation(self):
+        """Check if processing should be cancelled and raise exception if so."""
+        if self.cancellation_token and self.cancellation_token.cancelled:
+            logger.info("Cancellation detected, stopping summarization")
+            raise CancellationError("Summarization was cancelled")
+            
     def setup_torch_optimizations(self):
         """Setup torch optimizations for better performance."""
         if torch.cuda.is_available():
@@ -117,6 +128,9 @@ class EnhancedSummarizer:
     def load_models(self):
         """Load summarization and classification models with error handling."""
         try:
+            # Check for cancellation before loading models
+            self.check_cancellation()
+            
             # Use specific model loading for better control
             model_name = "facebook/bart-large-cnn"  # Better quality summarization model
             
@@ -127,6 +141,9 @@ class EnhancedSummarizer:
             self.model = self.model.to(self.device)
             if torch.cuda.is_available():
                 self.model = self.model.half()  # Use half precision on GPU
+            
+            # Check for cancellation during model loading    
+            self.check_cancellation()
                 
             # Load classifier for content categorization
             if torch.cuda.is_available():
@@ -143,6 +160,10 @@ class EnhancedSummarizer:
                     device=-1
                 )
                 
+        except CancellationError:
+            # Let cancellation propagate up
+            raise
+            
         except Exception as e:
             logger.error(f"Failed to load models: {e}")
             raise ModelLoadError(f"Model loading failed: {e}")
@@ -168,6 +189,9 @@ class EnhancedSummarizer:
     
     def prepare_data_stream(self, visual_content: str, transcription: str, captions: str, chunk_size: int = 1000) -> Generator[str, None, None]:
         """Prepare data in a streaming format with clear section markers."""
+        # Check for cancellation
+        self.check_cancellation()
+        
         # Sanitize inputs
         visual_content = self.sanitize_text(visual_content) if visual_content else ""
         transcription = self.sanitize_text(transcription) if transcription else ""
@@ -185,12 +209,21 @@ class EnhancedSummarizer:
             combined_text += f"TRANSCRIPT:\n{transcription}\n\n"
             
         # Split into chunks for processing
+        chunk_count = 0
         for i in range(0, len(combined_text), chunk_size):
+            # Check for cancellation periodically
+            chunk_count += 1
+            if chunk_count % 5 == 0:
+                self.check_cancellation()
+                
             yield combined_text[i:i + chunk_size]
     
     def generate_summary(self, text_chunks_generator):
-        """Generate a summary with length based on user preference."""
+        """Generate a summary with length based on user preference with cancellation support."""
         try:
+            # Initial cancellation check
+            self.check_cancellation()
+            
             # Collect chunks for processing
             chunks = list(text_chunks_generator)
             
@@ -198,6 +231,9 @@ class EnhancedSummarizer:
                 return "Could not generate summary due to insufficient content."
                 
             combined_text = " ".join(chunks)
+            
+            # Check cancellation before heavy NLP processing
+            self.check_cancellation()
             
             length_settings = {
                 "short": {
@@ -228,6 +264,9 @@ class EnhancedSummarizer:
             
             # Generate with careful parameters to prevent hallucinations
             with torch.no_grad(), torch.amp.autocast('cuda' if torch.cuda.is_available() else 'cpu'):
+                # Check cancellation before model inference
+                self.check_cancellation()
+                
                 outputs = self.model.generate(
                     **inputs,
                     max_length=settings["max_length"],
@@ -239,6 +278,9 @@ class EnhancedSummarizer:
                     do_sample=False  # Deterministic generation
                 )
             
+            # Check cancellation after model inference
+            self.check_cancellation()
+            
             # Decode the summary
             summary = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             
@@ -248,6 +290,9 @@ class EnhancedSummarizer:
             # Verify the summary doesn't contain suspicious patterns
             if re.search(r'https?://\S+', summary) or re.search(r'go to:', summary, re.IGNORECASE):
                 logger.warning("Suspicious patterns detected in summary, regenerating")
+                
+                # Check cancellation before regeneration
+                self.check_cancellation()
                 
                 # Fallback to more constrained generation
                 with torch.no_grad():
@@ -266,26 +311,40 @@ class EnhancedSummarizer:
             
             return summary
             
+        except CancellationError:
+            # Let cancellation propagate up
+            raise
+            
         except Exception as e:
             logger.error(f"Summary generation failed: {e}")
             return "Summary generation failed due to technical issues."
     
     def classify_content(self, text_chunks_generator: Generator[str, None, None]) -> Dict:
-        """Classify content type with improved categories."""
+        """Classify content type with improved categories and cancellation support."""
         backup_categories = ["general", "educational"]
         
         try:
+            # Initial cancellation check
+            self.check_cancellation()
+            
             # Process sample of content for classification
             sample_text = ""
             count = 0
             max_samples = 3  # Limit chunks to analyze
             
             for chunk in text_chunks_generator:
+                # Check cancellation during text collection
+                if count % 2 == 0:
+                    self.check_cancellation()
+                    
                 if count < max_samples:
                     sample_text += chunk + " "
                     count += 1
                 else:
                     break
+            
+            # Check cancellation before classification
+            self.check_cancellation()
             
             # Use more relevant video-focused categories
             categories = [
@@ -295,7 +354,7 @@ class EnhancedSummarizer:
                 "music", "art", "cooking", "fashion", "travel",
                 "technology", "science", "history", "health", "fitness",
                 "business", "finance", "marketing", "motivation",
-                "social media", "productivity", "self-improvement"
+                "social media", "productivity", "self-improvement",
             ]
             
             # Sanitize text before classification
@@ -307,6 +366,9 @@ class EnhancedSummarizer:
                 multi_label=True
             )
             
+            # Final cancellation check
+            self.check_cancellation()
+            
             return {
                 'primary_type': results['labels'][0],
                 'confidence': results['scores'][0],
@@ -317,6 +379,10 @@ class EnhancedSummarizer:
                 ]
             }
                 
+        except CancellationError:
+            # Let cancellation propagate up
+            raise
+            
         except Exception as e:
             logger.error(f"Classification failed, using fallback: {e}")
             return {
@@ -326,8 +392,11 @@ class EnhancedSummarizer:
             }
     
     def extract_key_elements(self, visual_content: str) -> List[str]:
-        """Extract meaningful key elements from visual analysis."""
+        """Extract meaningful key elements from visual analysis with cancellation support."""
         try:
+            # Initial cancellation check
+            self.check_cancellation()
+            
             elements = []
             
             # Extract elements from visual content descriptions
@@ -335,7 +404,11 @@ class EnhancedSummarizer:
                 # Split by newlines or commas to find distinct elements
                 content_parts = re.split(r'[,\n]', visual_content)
                 
-                for part in content_parts:
+                for i, part in enumerate(content_parts):
+                    # Periodic cancellation check
+                    if i % 10 == 0:
+                        self.check_cancellation()
+                        
                     # Extract frequency information if available
                     match = re.search(r'(.+?):\s*(\d+)\s*occurrences', part)
                     if match:
@@ -349,6 +422,9 @@ class EnhancedSummarizer:
                         if element and len(element) > 3:
                             elements.append(element)
             
+            # Final cancellation check
+            self.check_cancellation()
+            
             # Deduplicate and take top 5
             unique_elements = []
             for e in elements:
@@ -358,24 +434,37 @@ class EnhancedSummarizer:
             
             return unique_elements[:5]
             
+        except CancellationError:
+            # Let cancellation propagate up
+            raise
+            
         except Exception as e:
             logger.error(f"Element extraction error: {e}")
             return []
 
     def interpret_content(self, visual_content: str, transcription: str, captions: str) -> Dict:
-        """Create a comprehensive interpretation of the video content."""
+        """Create a comprehensive interpretation of the video content with cancellation support."""
         try:
+            # Initial cancellation check
+            self.check_cancellation()
+            
             # Create data stream for processing
             text_chunks_generator = self.prepare_data_stream(visual_content, transcription, captions)
             
             # Generate summary from the prepared data
             summary = self.generate_summary(text_chunks_generator)
             
+            # Check cancellation after summary generation
+            self.check_cancellation()
+            
             # Recreate the generator for classification since it was consumed
             text_chunks_generator = self.prepare_data_stream(visual_content, transcription, captions)
             
             # Get content classification
             classification = self.classify_content(text_chunks_generator)
+            
+            # Check cancellation after classification
+            self.check_cancellation()
             
             # Extract key visual elements
             visual_elements = self.extract_key_elements(visual_content)
@@ -387,6 +476,10 @@ class EnhancedSummarizer:
                 'additional_types': classification['additional_types'],
                 'visual_elements': visual_elements
             }
+            
+        except CancellationError:
+            # Let cancellation propagate up
+            raise
             
         except Exception as e:
             logger.error(f"Content interpretation failed: {e}")
@@ -400,9 +493,9 @@ class EnhancedSummarizer:
 
 
 class OptimizedVideoBot:
-    """Enhanced video analysis bot with improved summarization and content detection."""
+    """Enhanced video analysis bot with cancellation support."""
     
-    def __init__(self, sample_rate: int = 10, summary_length: str = "medium"):
+    def __init__(self, sample_rate=10, summary_length="medium", cancellation_token=None):
         """Initialize the video analysis bot with configurable parameters."""
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.setup_torch_optimizations()
@@ -420,11 +513,20 @@ class OptimizedVideoBot:
         self.transcription = ""
         self.youtube_captions = ""
         
+        # Cancellation support
+        self.cancellation_token = cancellation_token or CancellationToken()
+        
         # Lazy load models only when needed
         self.models_initialized = False
         
         # Setup temporary directory for processing
         self.setup_temp_directory()
+
+    def check_cancellation(self):
+            """Check if processing should be cancelled and raise exception if so."""
+            if self.cancellation_token and self.cancellation_token.cancelled:
+                logger.info("Cancellation detected, stopping processing")
+                raise CancellationError("Video processing was cancelled")
 
     def setup_torch_optimizations(self):
         """Setup torch optimizations for better performance."""
@@ -625,114 +727,141 @@ class OptimizedVideoBot:
             return []
 
     def process_video(self, video_path: str, is_youtube_url: bool = False) -> None:
-        """Process video file efficiently from either URL or local path."""
-        logger.info(f"Processing video: {'YouTube URL' if is_youtube_url else 'Local file'}")
-        try:
-            # Initialize models only when needed
-            self.initialize_models()
-            
-            # Download YouTube video if needed
-            downloaded_video = False
-            if is_youtube_url:
-                self.youtube_captions = self.get_youtube_captions(video_path)
-                video_path = self.download_video(video_path)
-                downloaded_video = True
-            else:
-                if not os.path.exists(video_path):
-                    raise ValueError(f"Video file not found: {video_path}")
-                self.youtube_captions = ""
+            """Process video file efficiently from either URL or local path with cancellation support."""
+            logger.info(f"Processing video: {'YouTube URL' if is_youtube_url else 'Local file'}")
+            try:
+                # Check for cancellation before starting
+                self.check_cancellation()
+                
+                # Initialize models only when needed
+                self.initialize_models()
+                
+                # Check for cancellation after model initialization
+                self.check_cancellation()
+                
+                # Download YouTube video if needed
                 downloaded_video = False
-            
-            # Open video capture with error handling flags
-            cap = cv2.VideoCapture(video_path)
-            # Set error mode flags to handle corrupted frames
-            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('H', '2', '6', '4'))
-            cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
-            
-            if not cap.isOpened():
-                raise ValueError("Could not open video file")
-            
-            # Video metadata
-            fps = cap.get(cv2.CAP_PROP_FPS)
-            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            
-            # Initialize tracking variables
-            self.key_frames_indices = [0]
-            self.key_frames = []
-            prev_frame = None
-            frame_idx = 0
-            
-            # Process frames with limits to manage memory
-            max_total_frames = min(total_frames, 20000)
-            max_key_frames = 100  # Maximum number of key frames to store
-            
-            # Stream frames instead of storing them all
-            for idx, frame in enumerate(self.frame_generator(cap)):
-                if idx >= max_total_frames:
-                    break
-                    
-                # Convert to grayscale for scene detection
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                if is_youtube_url:
+                    self.youtube_captions = self.get_youtube_captions(video_path)
+                    video_path = self.download_video(video_path)
+                    downloaded_video = True
+                else:
+                    if not os.path.exists(video_path):
+                        raise ValueError(f"Video file not found: {video_path}")
+                    self.youtube_captions = ""
+                    downloaded_video = False
                 
-                # Scene change detection
-                if prev_frame is not None:
-                    # Calculate difference between frames
-                    diff = cv2.absdiff(gray, prev_frame)
-                    mean_diff = np.mean(diff)
-                    
-                    # If significant difference detected, mark as key frame
-                    if mean_diff > 30:
-                        self.key_frames_indices.append(frame_idx)
+                # Check for cancellation after download/setup
+                self.check_cancellation()
+                
+                # Open video capture with error handling flags
+                cap = cv2.VideoCapture(video_path)
+                # Set error mode flags to handle corrupted frames
+                cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('H', '2', '6', '4'))
+                cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
+                
+                if not cap.isOpened():
+                    raise ValueError("Could not open video file")
+                
+                # Video metadata
+                fps = cap.get(cv2.CAP_PROP_FPS)
+                total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                
+                # Initialize tracking variables
+                self.key_frames_indices = [0]
+                self.key_frames = []
+                prev_frame = None
+                frame_idx = 0
+                
+                # Process frames with limits to manage memory
+                max_total_frames = min(total_frames, 20000)
+                max_key_frames = 100  # Maximum number of key frames to store
+                
+                # Stream frames instead of storing them all
+                for idx, frame in enumerate(self.frame_generator(cap)):
+                    # Check for cancellation periodically
+                    if idx % 50 == 0:
+                        self.check_cancellation()
                         
-                        # Store only a subset of frames to save memory
-                        if len(self.key_frames) < max_key_frames:
-                            # Store a smaller version of the frame
-                            small_frame = cv2.resize(frame, (112, 112))
-                            self.key_frames.append(small_frame)
+                    if idx >= max_total_frames:
+                        break
+                        
+                    # Convert to grayscale for scene detection
+                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    
+                    # Scene change detection
+                    if prev_frame is not None:
+                        # Calculate difference between frames
+                        diff = cv2.absdiff(gray, prev_frame)
+                        mean_diff = np.mean(diff)
+                        
+                        # If significant difference detected, mark as key frame
+                        if mean_diff > 30:
+                            self.key_frames_indices.append(frame_idx)
+                            
+                            # Store only a subset of frames to save memory
+                            if len(self.key_frames) < max_key_frames:
+                                # Store a smaller version of the frame
+                                small_frame = cv2.resize(frame, (112, 112))
+                                self.key_frames.append(small_frame)
+                    
+                    prev_frame = gray
+                    frame_idx += 1
+                    
+                    # Progress logging and memory management
+                    if frame_idx % 100 == 0:
+                        logger.info(f"Processed {frame_idx}/{max_total_frames} frames")
+                        # Force garbage collection periodically
+                        gc.collect()
+                        if torch.cuda.is_available():
+                            torch.cuda.empty_cache()
                 
-                prev_frame = gray
-                frame_idx += 1
+                # Check for cancellation before audio processing
+                self.check_cancellation()
                 
-                # Progress logging and memory management
-                if frame_idx % 100 == 0:
-                    logger.info(f"Processed {frame_idx}/{max_total_frames} frames")
-                    # Force garbage collection periodically
-                    gc.collect()
-                    if torch.cuda.is_available():
-                        torch.cuda.empty_cache()
-            
-            # Process audio only if YouTube captions aren't available
-            if is_youtube_url and self.youtube_captions and self.youtube_captions != "[No captions available]":
-                logger.info("Using YouTube captions, skipping audio transcription")
-                self.transcription = "[Using YouTube captions instead]"
-            else:
-                # Process audio in a separate thread
-                with ThreadPoolExecutor(max_workers=1) as executor:
-                    audio_future = executor.submit(self.process_audio, video_path)
-                    self.transcription = audio_future.result()
-            
-            # Close video capture and clean up
-            cap.release()
-            
-            # Remove temporary YouTube download
-            if is_youtube_url and downloaded_video and os.path.exists(video_path):
-                os.remove(video_path)
-            
-            # Logging
-            logger.info(f"Video processing complete. Total scenes: {len(self.key_frames_indices)}")
-            logger.info(f"Total key frames stored: {len(self.key_frames)}")
-            
-        except Exception as e:
-            logger.error(f"Video processing error: {e}")
-            # Cleanup
-            if 'cap' in locals():
+                # Process audio only if YouTube captions aren't available
+                if is_youtube_url and self.youtube_captions and self.youtube_captions != "[No captions available]":
+                    logger.info("Using YouTube captions, skipping audio transcription")
+                    self.transcription = "[Using YouTube captions instead]"
+                else:
+                    # Process audio in a separate thread
+                    with ThreadPoolExecutor(max_workers=1) as executor:
+                        audio_future = executor.submit(self.process_audio, video_path)
+                        self.transcription = audio_future.result()
+                
+                # Close video capture and clean up
                 cap.release()
-            if is_youtube_url and downloaded_video and os.path.exists(video_path):
-                os.remove(video_path)
+                
+                # Remove temporary YouTube download
+                if is_youtube_url and downloaded_video and os.path.exists(video_path):
+                    os.remove(video_path)
+                
+                # Final cancellation check
+                self.check_cancellation()
+                
+                # Logging
+                logger.info(f"Video processing complete. Total scenes: {len(self.key_frames_indices)}")
+                logger.info(f"Total key frames stored: {len(self.key_frames)}")
+                
+            except CancellationError:
+                # Let cancellation propagate up
+                raise
+                
+            except Exception as e:
+                logger.error(f"Video processing error: {e}")
+                # Cleanup
+                if 'cap' in locals():
+                    cap.release()
+                if is_youtube_url and downloaded_video and os.path.exists(video_path):
+                    os.remove(video_path)
+                raise
                 
     def process_audio(self, video_path: str) -> str:
-        """Process audio from video file and generate transcription."""
+        """Process audio from video file with cancellation support."""
         try:
+            # Check for cancellation before starting
+            self.check_cancellation()
+            
             # Extract audio efficiently - only load audio stream
             audio_path = self.get_temp_path("audio", ".wav")
             
@@ -742,7 +871,10 @@ class OptimizedVideoBot:
                 
                 if video.audio is None:
                     return "[No audio found]"
-                    
+                
+                # Check for cancellation before audio processing
+                self.check_cancellation()
+                
                 # Use lower quality audio to reduce processing time
                 video.audio.write_audiofile(
                     audio_path,
@@ -756,6 +888,9 @@ class OptimizedVideoBot:
                 if 'video' in locals():
                     video.close()
                     del video
+            
+            # Check for cancellation after audio extraction
+            self.check_cancellation()
                 
             # Process audio in chunks for transcription
             results = []
@@ -766,13 +901,20 @@ class OptimizedVideoBot:
                 
                 # Process audio in smaller chunks
                 chunk_size = 8192
+                chunk_count = 0
                 while True:
                     data = wf.readframes(chunk_size)
                     if len(data) == 0:
                         break
+                    
                     if rec.AcceptWaveform(data):
                         results.append(json.loads(rec.Result())['text'])
                     
+                    # Check cancellation periodically during transcription
+                    chunk_count += 1
+                    if chunk_count % 20 == 0:
+                        self.check_cancellation()
+                        
                     # Force garbage collection periodically
                     if len(results) % 10 == 0:
                         gc.collect()
@@ -780,6 +922,9 @@ class OptimizedVideoBot:
             # Clean up temp files immediately
             if os.path.exists(audio_path):
                 os.remove(audio_path)
+            
+            # Final cancellation check
+            self.check_cancellation()
                 
             # Combine transcription results
             transcription = ' '.join(results)
@@ -790,6 +935,10 @@ class OptimizedVideoBot:
             
             return transcription
 
+        except CancellationError:
+            # Let cancellation propagate up
+            raise
+            
         except Exception as e:
             logger.error(f"Audio processing error: {e}")
             return "[Audio processing error]"
@@ -802,14 +951,21 @@ class OptimizedVideoBot:
                 torch.cuda.empty_cache()
 
     def analyze_scenes(self) -> List[Dict]:
-        """Analyze scenes from key frames to extract visual information."""
+        """Analyze scenes from key frames to extract visual information with cancellation support."""
         if len(self.key_frames_indices) < 2:
             logger.warning("Not enough scenes detected for analysis.")
             return []
 
         try:
+            # Initial cancellation check
+            self.check_cancellation()
+            
             scene_analyses = []
             for i, frame in enumerate(self.key_frames):
+                # Periodic cancellation check
+                if i % 10 == 0:
+                    self.check_cancellation()
+                    
                 if i >= len(self.key_frames_indices):
                     break
                     
@@ -852,120 +1008,174 @@ class OptimizedVideoBot:
                 except Exception as frame_error:
                     logger.error(f"Frame analysis error: {frame_error}")
                     continue
-
+            
+            # Final cancellation check
+            self.check_cancellation()
+            
             return scene_analyses
+        
+        except CancellationError:
+            # Let cancellation propagate up
+            raise
         
         except Exception as e:
             logger.error(f"Scene analysis error: {e}")
             return []
 
     def generate_summary(self) -> Dict:
-        """Generate a summary of the video content."""
-        scene_analyses = self.analyze_scenes()
-        
-        # Count scene types without storing all scene data
-        scene_counts = {}
-        for scene in scene_analyses:
-            content = scene['visual_content']
-            scene_counts[content] = scene_counts.get(content, 0) + 1
+        """Generate a summary of the video content with cancellation support."""
+        try:
+            # Initial cancellation check
+            self.check_cancellation()
+            
+            scene_analyses = self.analyze_scenes()
+            
+            # Count scene types without storing all scene data
+            scene_counts = {}
+            for scene in scene_analyses:
+                content = scene['visual_content']
+                scene_counts[content] = scene_counts.get(content, 0) + 1
+            
+            # Final cancellation check
+            self.check_cancellation()
 
-        # Ensure valid scene data
-        if not scene_counts:
-            logger.warning("No valid scenes detected.")
+            # Ensure valid scene data
+            if not scene_counts:
+                logger.warning("No valid scenes detected.")
+                return {
+                    'scene_frequency': {},
+                    'transcription': self.transcription,
+                    'youtube_captions': self.youtube_captions
+                }
+
+            sorted_scenes = dict(
+                sorted(scene_counts.items(), key=lambda x: x[1], reverse=True)
+            )
+
+            # Return summary data
             return {
-                'scene_frequency': {},
+                'scene_frequency': sorted_scenes,
                 'transcription': self.transcription,
                 'youtube_captions': self.youtube_captions
             }
-
-        sorted_scenes = dict(
-            sorted(scene_counts.items(), key=lambda x: x[1], reverse=True)
-        )
-
-        # Return summary data
-        return {
-            'scene_frequency': sorted_scenes,
-            'transcription': self.transcription,
-            'youtube_captions': self.youtube_captions
-        }
+            
+        except CancellationError:
+            # Let cancellation propagate up
+            raise
+            
+        except Exception as e:
+            logger.error(f"Summary generation error: {e}")
+            return {
+                'scene_frequency': {},
+                'transcription': "[Error processing transcription]",
+                'youtube_captions': "[Error processing captions]"
+            }
 
     def generate_interpreted_summary(self) -> Dict:
-        """Generate an interpreted summary with analysis of content."""
-        summary = self.generate_summary()
-        
-        # Format visual content for interpretation
-        visual_content = "\n".join([
-            f"{content}: {count} occurrences" 
-            for content, count in summary['scene_frequency'].items()
-        ])
-        
-        # Determine which transcript to use for interpretation
-        transcript_to_use = summary['youtube_captions']
-        transcript_source = "YouTube captions"
-        
-        # If YouTube captions aren't available or are empty, use audio transcription
-        if not transcript_to_use or transcript_to_use in ["[No captions available]", ""]:
-            transcript_to_use = summary['transcription']
-            transcript_source = "audio transcription"
-        
-        logger.info(f"Using {transcript_source} for content interpretation")
-        
-        # Create interpretation using enhanced summarizer
-        interpretation = self.summarizer.interpret_content(
-            visual_content,
-            summary['transcription'],  
-            summary['youtube_captions']
-        )
-        
-        # Create summary with transcriptions included
-        interpreted_summary = {
-            'narrative': interpretation['summary'],
-            'content_type': interpretation['content_type'],
-            'type_confidence': interpretation['type_confidence'],
-            'additional_types': interpretation.get('additional_types', []),
-            'main_visual_elements': interpretation.get('visual_elements', []),
-            'technical_stats': {
-                'total_scenes': len(self.key_frames_indices),
-                'transcript_source': transcript_source,
-                'has_audio': self.transcription != "[No audio found]" and self.transcription != "[Using YouTube captions instead]",
-                'has_captions': self.youtube_captions != "[No captions available]"
-            },
-            'transcriptions': {
-                'youtube_captions': summary['youtube_captions'],
-                'audio_transcription': summary['transcription']
-            }
-        }
-        
-        # Log summary info
-        logger.info("\nINTERPRETED SUMMARY")
-        logger.info("="*50)
-        
-        logger.info(f"\nPRIMARY CLASSIFICATION:")
-        logger.info(f"• Type: {interpreted_summary['content_type'].title()}")
-        logger.info(f"• Confidence: {interpreted_summary['type_confidence']:.2f}")
-        
-        if interpreted_summary['additional_types']:
-            logger.info("\nADDITIONAL CATEGORIES:")
-            for type_info in interpreted_summary['additional_types']:
-                logger.info(f"• {type_info['label'].title()} (Confidence: {type_info['score']:.2f})")
-        
-        logger.info("\nVISUAL CONTENT ANALYSIS:")
-        for element in interpreted_summary['main_visual_elements']:
-            logger.info(f"• {element}")
-        
-        logger.info("\nCONTENT SUMMARY:")
-        logger.info(interpreted_summary['narrative'])
-        
-        # Display which transcript was used
-        logger.info(f"\nTRANSCRIPT USED: {transcript_source}")
-        
-        # Clear memory-intensive data before returning
-        self.key_frames = []
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        """Generate an interpreted summary with analysis of content and cancellation support."""
+        try:
+            # Initial cancellation check
+            self.check_cancellation()
             
-        return interpreted_summary
+            summary = self.generate_summary()
+            
+            # Format visual content for interpretation
+            visual_content = "\n".join([
+                f"{content}: {count} occurrences" 
+                for content, count in summary['scene_frequency'].items()
+            ])
+            
+            # Determine which transcript to use for interpretation
+            transcript_to_use = summary['youtube_captions']
+            transcript_source = "YouTube captions"
+            
+            # If YouTube captions aren't available or are empty, use audio transcription
+            if not transcript_to_use or transcript_to_use in ["[No captions available]", ""]:
+                transcript_to_use = summary['transcription']
+                transcript_source = "audio transcription"
+            
+            logger.info(f"Using {transcript_source} for content interpretation")
+            
+            # Cancellation check before intensive NLP operations
+            self.check_cancellation()
+            
+            # Create interpretation using enhanced summarizer
+            interpretation = self.summarizer.interpret_content(
+                visual_content,
+                summary['transcription'],  
+                summary['youtube_captions']
+            )
+            
+            # Final cancellation check
+            self.check_cancellation()
+            
+            # Create summary with transcriptions included
+            interpreted_summary = {
+                'narrative': interpretation['summary'],
+                'content_type': interpretation['content_type'],
+                'type_confidence': interpretation['type_confidence'],
+                'additional_types': interpretation.get('additional_types', []),
+                'main_visual_elements': interpretation.get('visual_elements', []),
+                'technical_stats': {
+                    'total_scenes': len(self.key_frames_indices),
+                    'transcript_source': transcript_source,
+                    'has_audio': self.transcription != "[No audio found]" and self.transcription != "[Using YouTube captions instead]",
+                    'has_captions': self.youtube_captions != "[No captions available]"
+                },
+                'transcriptions': {
+                    'youtube_captions': summary['youtube_captions'],
+                    'audio_transcription': summary['transcription']
+                }
+            }
+            
+            # Log summary info
+            logger.info("\nINTERPRETED SUMMARY")
+            logger.info("="*50)
+            
+            logger.info(f"\nPRIMARY CLASSIFICATION:")
+            logger.info(f"• Type: {interpreted_summary['content_type'].title()}")
+            logger.info(f"• Confidence: {interpreted_summary['type_confidence']:.2f}")
+            
+            if interpreted_summary['additional_types']:
+                logger.info("\nADDITIONAL CATEGORIES:")
+                for type_info in interpreted_summary['additional_types']:
+                    logger.info(f"• {type_info['label'].title()} (Confidence: {type_info['score']:.2f})")
+            
+            logger.info("\nVISUAL CONTENT ANALYSIS:")
+            for element in interpreted_summary['main_visual_elements']:
+                logger.info(f"• {element}")
+            
+            logger.info("\nCONTENT SUMMARY:")
+            logger.info(interpreted_summary['narrative'])
+            
+            # Display which transcript was used
+            logger.info(f"\nTRANSCRIPT USED: {transcript_source}")
+            
+            # Clear memory-intensive data before returning
+            self.key_frames = []
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                
+            return interpreted_summary
+            
+        except CancellationError:
+            # Let cancellation propagate up
+            raise
+            
+        except Exception as e:
+            logger.error(f"Interpreted summary generation error: {e}")
+            return {
+                'narrative': "Analysis failed due to technical issues.",
+                'content_type': "unknown",
+                'type_confidence': 0.0,
+                'additional_types': [],
+                'main_visual_elements': [],
+                'transcriptions': {
+                    'youtube_captions': summary.get('youtube_captions', "[Error retrieving captions]"),
+                    'audio_transcription': summary.get('transcription', "[Error processing audio]")
+                }
+            }
         
     def cleanup(self):
         """Clean up resources and temporary files."""
