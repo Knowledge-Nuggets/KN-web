@@ -34,7 +34,13 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(auth, user, pwd);
       console.log("User logged in: ", userCredential.user);
       setSuccess(true);
-      navigate("/home"); // Redirect to Home.jsx
+
+      // Check for admin credentials
+      if (user.endsWith("@admin.com") && pwd.endsWith("Admin12@@")) {
+        navigate("/admin"); // Redirect to admin page
+      } else {
+        navigate("/home"); // Redirect regular users to home
+      }
     } catch (error) {
       console.error("Error logging in: ", error);
       setErrMsg("Invalid username or password");
