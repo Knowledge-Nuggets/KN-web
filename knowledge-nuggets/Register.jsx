@@ -28,6 +28,9 @@ const Register = () => {
   const [errMsg, setErrMsg] = useState("");
   const [success, setSuccess] = useState(false);
 
+  // Add occupation state
+  const [occupation, setOccupation] = useState("student");
+
   useEffect(() => {
     userRef.current.focus();
   }, []);
@@ -64,9 +67,10 @@ const Register = () => {
       );
       console.log("User registered: ", userCredential.user);
 
-      // Save user details to Realtime Database
+      // Save user details to Realtime Database with occupation
       await set(ref(db, "users/" + userCredential.user.uid), {
         email: user,
+        occupation: occupation,
         createdAt: new Date().toISOString(),
       });
 
@@ -84,8 +88,7 @@ const Register = () => {
       <div className="left">
         {/* Logo */}
         <img
-          src="assets/kn-knowledge-nuggets.png
-        "
+          src="assets/kn-knowledge-nuggets.png"
           alt="Knowledge Nuggets Logo"
           className="logo"
         />
@@ -197,6 +200,21 @@ const Register = () => {
             >
               Must match the first password input field.
             </p>
+
+            {/* Occupation Dropdown */}
+            <label htmlFor="occupation">Occupation:</label>
+            <select
+              id="occupation"
+              value={occupation}
+              onChange={(e) => setOccupation(e.target.value)}
+              required
+              className="occupation-dropdown"
+            >
+              <option value="student">Student</option>
+              <option value="professional">Professional</option>
+              <option value="researcher">Researcher</option>
+              <option value="content-creator">Content Creator</option>
+            </select>
 
             <button disabled={!validName || !validPwd || !validMatch}>
               Sign Up

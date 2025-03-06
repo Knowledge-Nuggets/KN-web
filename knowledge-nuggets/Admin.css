@@ -1,0 +1,219 @@
+/* Admin.css */
+.admin-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  font-family: "Inter", sans-serif;
+}
+
+.admin-header {
+  margin-bottom: 2rem;
+  animation: slideDown 0.6s ease-out;
+}
+
+.header-icon {
+  margin-right: 12px;
+  color: #4f8bff;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.controls {
+  display: grid;
+  gap: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  border-radius: 16px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.search-box:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.search-box input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  margin-left: 8px;
+}
+
+.search-box input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.search-icon {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.2rem;
+}
+
+.filter-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.filter-group label {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.filter-group label:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.filter-group select {
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 0.5rem;
+  width: 100%;
+  cursor: pointer;
+}
+
+.filter-group option {
+  background: #1a1a2e;
+  color: #fff;
+}
+
+.filter-icon {
+  margin-right: 8px;
+  font-size: 1.2rem;
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.user-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1.5rem;
+  -webkit-backdrop-filter: blur(10px); /* For Safari support */
+  backdrop-filter: blur(10px);
+  animation: slideUp 0.4s ease-out forwards;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.user-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-email {
+  font-weight: 500;
+  color: #4f8bff;
+  font-size: 1.1rem;
+}
+
+.delete-btn {
+  background: rgba(255, 77, 77, 0.1);
+  border: none;
+  padding: 0.6rem;
+  border-radius: 8px;
+  color: #ff4d4d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.delete-btn:hover {
+  background: rgba(255, 77, 77, 0.2);
+  transform: scale(1.1);
+}
+
+.user-details {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  font-weight: 500;
+  color: #fff;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 1.5rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  .users-grid {
+    grid-template-columns: 1fr;
+  }
+}

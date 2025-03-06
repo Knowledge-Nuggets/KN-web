@@ -9,6 +9,7 @@ import Login from "./Login";
 import Home from "./Home";
 import Profile from "./Profile";
 import PrivateRoute from "./PrivateRoute";
+import Admin from "./Admin";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/home" element={<PrivateRoute element={Home} />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/profile" element={<PrivateRoute element={Profile} />} />
       </Routes>
     </Router>
