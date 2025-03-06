@@ -1,15 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { ref, onValue, remove } from "firebase/database";
-import { db } from "./firebase/firebase";
-import { FiSearch, FiTrash2, FiUserX, FiClock } from "react-icons/fi";
+import { db, auth } from "./firebase/firebase";
+import {
+  FiPieChart,
+  FiUsers,
+  FiTrash2,
+  FiLogOut,
+  FiSearch,
+} from "react-icons/fi";
+import { signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import "./Admin.css";
 
 const AdminPage = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [filterOccupation, setFilterOccupation] = useState("all");
+
+  // Add logout function
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   useEffect(() => {
     const usersRef = ref(db, "users");
@@ -57,89 +76,124 @@ const AdminPage = () => {
   };
 
   return (
-    <div className="admin-container">
-      <div className="admin-header">
-        <h1>
-          <FiUserX className="header-icon" />
-          User Administration
-        </h1>
+    <div className="admin-layout">
+      {/* Admin Container */}
+      <div className="admin-container">
+        <div className="admin-header">
+          <h1>
+            <FiUsers /> User Management
+          </h1>
+          <button onClick={handleLogout} className="logout-btn">
+            <FiLogOut /> Logout
+          </button>
+        </div>
+
+        {/* Controls */}
         <div className="controls">
           <div className="search-box">
-            <FiSearch className="search-icon" />
             <input
               type="text"
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            <FiSearch className="search-icon" />
           </div>
 
           <div className="filter-group">
-            <label>
-              <FiClock className="filter-icon" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-              </select>
-            </label>
-
-            <label>
-              <span className="filter-icon">👤</span>
-              <select
-                value={filterOccupation}
-                onChange={(e) => setFilterOccupation(e.target.value)}
-              >
-                <option value="all">All Occupations</option>
-                <option value="student">Student</option>
-                <option value="professional">Professional</option>
-                <option value="researcher">Researcher</option>
-                <option value="content-creator">Content Creator</option>
-              </select>
-            </label>
+            <select
+              value={filterOccupation}
+              onChange={(e) => setFilterOccupation(e.target.value)}
+            >
+              <option value="all">All Occupations</option>
+              <option value="student">Student</option>
+              <option value="professional">Professional</option>
+              <option value="researcher">Researcher</option>
+              <option value="content-creator">Content Creator</option>
+            </select>
           </div>
+        </div>
+
+        {/* Users Grid */}
+        <div className="users-grid">
+          {filteredUsers.map((user) => (
+            <div key={user.id} className="user-card">
+              <div className="user-header">
+                <span className="user-email">{user.email}</span>
+                <button
+                  onClick={() => handleDeleteUser(user.id)}
+                  className="delete-btn"
+                >
+                  <FiTrash2 />
+                </button>
+              </div>
+              <div className="user-details">
+                <div className="detail-item">
+                  <span>Occupation:</span>
+                  <span>{user.occupation}</span>
+                </div>
+                <div className="detail-item">
+                  <span>Registered:</span>
+                  <span>
+                    {new Date(user.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="users-grid">
-        {filteredUsers.map((user, index) => (
-          <div
-            key={user.id}
-            className="user-card"
-            style={{ animationDelay: `${index * 0.1}s` }}
-          >
-            <div className="user-header">
-              <span className="user-email">{user.email}</span>
-              <button
-                onClick={() => handleDeleteUser(user.id)}
-                className="delete-btn"
-              >
-                <FiTrash2 />
-              </button>
-            </div>
-            <div className="user-details">
-              <div className="detail-item">
-                <span className="detail-label">Occupation</span>
-                <span className="detail-value">{user.occupation}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Registered</span>
-                <span className="detail-value">
-                  {new Date(user.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
+      {/* Stats Container */}
+      <div className="stats-container">
+        <h2>
+          <FiPieChart /> User Occupation Distribution
+        </h2>
+        <div className="chart-container">
+          {getOccupationData(filteredUsers).map((item, index) => (
+            <div key={item.occupation} className="chart-item">
+              <div className="chart-label">
+                <span className="occupation">{item.occupation}</span>
+                <span className="count">
+                  {item.count} users ({item.percentage}%)
                 </span>
               </div>
+              <div className="chart-bar">
+                <div
+                  className="bar-fill"
+                  style={{
+                    width: `${item.percentage}%`,
+                    backgroundColor: `hsl(${index * 60}, 70%, 45%)`,
+                  }}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
+};
+
+// Helper function for occupation stats
+const getOccupationData = (users) => {
+  const occupationCount = users.reduce((acc, user) => {
+    acc[user.occupation] = (acc[user.occupation] || 0) + 1;
+    return acc;
+  }, {});
+
+  const total = users.length;
+  return Object.entries(occupationCount)
+    .map(([occupation, count]) => ({
+      occupation,
+      count,
+      percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
 };
 
 export default AdminPage;
