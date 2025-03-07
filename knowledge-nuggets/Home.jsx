@@ -1142,16 +1142,6 @@ const Home = () => {
               and presentations.
             </p>
           </div>
-          <div className="for-who-card">
-            <div className="for-who-image">
-              <img src="assets/creator.png" alt="Content Creators" />
-            </div>
-            <h3>Content Creators</h3>
-            <p>
-              Easily summarize long videos to create engaging content, scripts,
-              or captions for your audience.
-            </p>
-          </div>
         </div>
       </div>
 
