@@ -11,7 +11,7 @@ import { jsPDF } from "jspdf";
 
 // Define a consistent API base URL
 const API_BASE_URL =
-  "https://papua-rap-treating-glucose.trycloudflare.com"; // Use localhost or your server IP
+  "https://clicks-filtering-david-abc.trycloudflare.com"; // Use localhost or your server IP
 
 const Home = () => {
   const [url, setUrl] = useState("");
