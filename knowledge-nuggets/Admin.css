@@ -138,6 +138,7 @@
   background: rgba(255, 77, 77, 0.1);
   border: none;
   padding: 0.5rem;
+  max-width: 50px;
   border-radius: 8px;
   color: #ff4d4d;
   cursor: pointer;
@@ -244,10 +245,11 @@
   border-radius: 12px;
   color: #ff4d4d;
   cursor: pointer;
-  display: inline-flex;
+  max-width: 150px;
   align-items: center;
   gap: 0.5rem;
   transition: background 0.2s ease;
+
 }
 
 .logout-btn:hover {
