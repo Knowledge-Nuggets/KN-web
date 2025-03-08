@@ -99,8 +99,20 @@ const Login = () => {
                 value={pwd}
                 required
               />
-              <button>Sign In</button>
+            <button>Sign In</button>
             </form>
+            <p className="need-account">
+              Need an Account?
+              <br />
+              <Link to="/register" className="sign-up-button">
+                Sign Up
+              </Link>
+            </p>
+            <p className="forgot-password">
+              <Link to="/forgot-password" className="forgot-password-link">
+                Forgot Password?
+              </Link>
+            </p>
             <p className="need-account">
               Need an Account?
               <br />

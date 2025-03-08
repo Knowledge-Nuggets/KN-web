@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import Register from "./Register";
 import Login from "./Login";
+import ForgotPassword from "./ForgotPassword";
 import Home from "./Home";
 import Profile from "./Profile";
 import PrivateRoute from "./PrivateRoute";
