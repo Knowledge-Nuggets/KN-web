@@ -109,7 +109,6 @@ const AdminPage = () => {
               <option value="student">Student</option>
               <option value="professional">Professional</option>
               <option value="researcher">Researcher</option>
-              <option value="content-creator">Content Creator</option>
             </select>
           </div>
         </div>
