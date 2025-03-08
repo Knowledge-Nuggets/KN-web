@@ -22,82 +22,9 @@ from datetime import datetime
 import timm
 import gc
 import time
-from main import CancellationError, CancellationToken
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-class SentimentAnalyzer:
-    def __init__(self, device=None):
-        self.device = device or torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.sentiment_model = pipeline(
-            "sentiment-analysis",
-            model="distilbert-base-uncased-finetuned-sst-2-english",
-            device=0 if torch.cuda.is_available() else -1
-        )
-        self.emotion_model = pipeline(
-            "text-classification", 
-            model="bhadresh-savani/distilbert-base-uncased-emotion",
-            device=0 if torch.cuda.is_available() else -1
-        )
-    
-    def analyze_transcript_sentiment(self, transcript, chunk_size=512):
-        """Analyze sentiment and emotions in transcript."""
-        if not transcript or len(transcript) < 10:
-            return {"sentiment": "neutral", "confidence": 0.0, "emotions": {}}
-            
-        # Split long transcript into chunks for processing
-        chunks = [transcript[i:i+chunk_size] for i in range(0, len(transcript), chunk_size)]
-        
-        # Get sentiment for each chunk
-        sentiments = []
-        for chunk in chunks:
-            result = self.sentiment_model(chunk)[0]
-            sentiments.append({"label": result["label"], "score": result["score"]})
-        
-        # Calculate overall sentiment
-        pos_score = sum(s["score"] for s in sentiments if s["label"] == "POSITIVE") / len(sentiments)
-        neg_score = sum(s["score"] for s in sentiments if s["label"] == "NEGATIVE") / len(sentiments)
-        
-        # Analyze emotions in manageable chunks
-        emotions = {}
-        for chunk in chunks[:5]:  # Limit to first 5 chunks for performance
-            emotion_result = self.emotion_model(chunk)[0]
-            emotion = emotion_result["label"]
-            emotions[emotion] = emotions.get(emotion, 0) + emotion_result["score"]
-        
-        # Normalize emotion scores
-        emotions = {k: v/5 for k, v in emotions.items()}
-        
-        # Calculate sentiment shifts over time
-        sentiment_shifts = self._detect_sentiment_shifts(sentiments)
-        
-        return {
-            "overall_sentiment": "POSITIVE" if pos_score > neg_score else "NEGATIVE",
-            "positive_score": float(pos_score),
-            "negative_score": float(neg_score),
-            "sentiment_confidence": float(max(pos_score, neg_score)),
-            "dominant_emotion": max(emotions.items(), key=lambda x: x[1])[0] if emotions else "neutral",
-            "emotions": emotions,
-            "sentiment_shifts": sentiment_shifts
-        }
-    
-    def _detect_sentiment_shifts(self, sentiment_chunks):
-        """Detect significant shifts in sentiment."""
-        shifts = []
-        current_sentiment = None
-        
-        for i, chunk in enumerate(sentiment_chunks):
-            if current_sentiment and chunk["label"] != current_sentiment:
-                shifts.append({
-                    "from": current_sentiment,
-                    "to": chunk["label"],
-                    "chunk_index": i,
-                    "confidence": chunk["score"]
-                })
-            current_sentiment = chunk["label"]
-            
-        return shifts
 
 class RetryableError(Exception):
     """Errors that should be retried with backoff."""
@@ -175,11 +102,10 @@ class EnhancedSummarizer:
         self.summary_length = summary_length
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.setup_torch_optimizations()
+        self.load_models()
         
         # Store cancellation token if provided
         self.cancellation_token = cancellation_token
-        
-        self.load_models()
         
     def check_cancellation(self):
         """Check if processing should be cancelled and raise exception if so."""
@@ -312,19 +238,19 @@ class EnhancedSummarizer:
                     "max_length": 150, 
                     "min_length": 50,
                     "length_penalty": 1.5,  # Penalize longer outputs more
-                    "num_beams": 4          # Fewer beams for shorter summaries
+                    "num_beams": 3          # Fewer beams for shorter summaries
                 },
                 "medium": {
                     "max_length": 250, 
                     "min_length": 100,
                     "length_penalty": 1.0,  # Standard penalty
-                    "num_beams": 5          # Standard beam search
+                    "num_beams": 4          # Standard beam search
                 },
                 "long": {
-                    "max_length": 500, 
-                    "min_length": 250,
+                    "max_length": 450, 
+                    "min_length": 200,
                     "length_penalty": 0.8,  # Less penalty for length
-                    "num_beams": 6          # More beams for better quality
+                    "num_beams": 5          # More beams for better quality
                 }
             }
             
@@ -593,8 +519,6 @@ class OptimizedVideoBot:
         
         # Setup temporary directory for processing
         self.setup_temp_directory()
-
-        self.sentiment_analyzer = SentimentAnalyzer(device=self.device)
 
     def check_cancellation(self):
             """Check if processing should be cancelled and raise exception if so."""
