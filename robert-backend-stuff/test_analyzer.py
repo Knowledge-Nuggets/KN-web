@@ -22,6 +22,7 @@ from datetime import datetime
 import timm
 import gc
 import time
+from main import CancellationError, CancellationToken
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -102,10 +103,11 @@ class EnhancedSummarizer:
         self.summary_length = summary_length
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.setup_torch_optimizations()
-        self.load_models()
         
         # Store cancellation token if provided
         self.cancellation_token = cancellation_token
+        
+        self.load_models()
         
     def check_cancellation(self):
         """Check if processing should be cancelled and raise exception if so."""
@@ -235,22 +237,22 @@ class EnhancedSummarizer:
             
             length_settings = {
                 "short": {
-                    "max_length": 150, 
-                    "min_length": 50,
+                    "max_length": 250, 
+                    "min_length": 150,
                     "length_penalty": 1.5,  # Penalize longer outputs more
-                    "num_beams": 3          # Fewer beams for shorter summaries
+                    "num_beams": 4          # Fewer beams for shorter summaries
                 },
                 "medium": {
-                    "max_length": 250, 
-                    "min_length": 100,
+                    "max_length": 400, 
+                    "min_length": 300,
                     "length_penalty": 1.0,  # Standard penalty
-                    "num_beams": 4          # Standard beam search
+                    "num_beams": 5        # Standard beam search
                 },
                 "long": {
-                    "max_length": 450, 
-                    "min_length": 200,
+                    "max_length": 700, 
+                    "min_length": 350,
                     "length_penalty": 0.8,  # Less penalty for length
-                    "num_beams": 5          # More beams for better quality
+                    "num_beams": 6          # More beams for better quality
                 }
             }
             
