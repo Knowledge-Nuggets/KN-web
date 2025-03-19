@@ -10,8 +10,7 @@ import { saveAs } from "file-saver";
 import { jsPDF } from "jspdf";
 
 // Define a consistent API base URL
-const API_BASE_URL =
-  "https://keith-ranch-juice-showers.trycloudflare.com"; // Use localhost or your server IP
+const API_BASE_URL = "https://keith-ranch-juice-showers.trycloudflare.com"; // Use localhost or your server IP
 
 const Home = () => {
   const [url, setUrl] = useState("");
@@ -940,7 +939,11 @@ const Home = () => {
                       style={{ width: `${progress}%` }}
                     ></div>
                     <span className="progress-text">
-                      {Math.round(progress)}%
+                      {progress < 30
+                        ? "Downloading..."
+                        : progress < 70
+                        ? "Analyzing..."
+                        : "Summarizing..."}
                     </span>
                   </div>
                 )}
